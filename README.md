@@ -1,5 +1,5 @@
 # irisa-text-normalizer
-# Text nomalisation tools from IRISA lab
+# Text normalisation tools from IRISA lab
 
 # Synopsis
 
