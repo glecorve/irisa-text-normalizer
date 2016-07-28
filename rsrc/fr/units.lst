@@ -1,0 +1,133 @@
+%	pour cent
+pt	point
+
+# distances, area and volumes
+nm	nanomètre
+µm	micromètre
+mm	millimètre
+cm	centimètre
+dm	decimètre
+m	mètre
+dam	decamètre
+hm	hectomètre
+[Kk]ms?	kilomètre
+[Kk][Pp][Hh]	kilomètre-heure	PLURAL=kilomètres-heure
+a	are, UNRELIABLE
+ha	hectare
+l	litre, UNRELIABLE
+dl	decilitre
+cl	centilitre
+ml	millilitre
+L	litre
+dL	decilitre
+cL	centilitre
+mL	millilitre
+cc	centimètre cube PLURAL=centimètres cubes
+ccm	centimètre cube PLURAL=centimètres cubes
+
+# weight
+µg	microgramme
+mg	milligramme
+g	gramme
+kg	kilogramme
+Kg	kilogramme
+t	tonne, UNRELIABLE
+T	tonne, UNRELIABLE
+
+#electricity, physics
+A	ampère, UNRELIABLE
+V	volt
+eV	électronvolt
+[kK]eV	kilo-électronvolt
+MeV	méga-électronvolt
+GeV	giga-électronvolt
+W	watt, UNRELIABLE
+kW	kilo-watt
+Wh	watt-heure	PLURAL=watts-heure
+[Kk][Ww]h	kilo-watt-heure	PLURAL=kilo-watts-heure
+MWh	méga-watt-heure	PLURAL=méga-watts-heure
+GWh	giga-watt-heure	PLURAL=giga-watts-heure
+Hz	hertz	PLURAL=hertz
+hz	hertz	PLURAL=hertz
+[Kk][Hh][Zz]	kilo-hertz	PLURAL=kilo-hertz
+[Mm][Hh][Zz]	méga-hertz	PLURAL=méga-hertz
+[Gg][Hh][Zz]	giga-hertz	PLURAL=giga-hertz
+N	newton, UNRELIABLE
+°	degré
+º	degré
+ºC	degré Celsius	PLURAL=degrés Celsius
+ºF	degré Farenheit	PLURAL=degrés Farenheit
+rad	radian
+K	kelvin, UNRELIABLE
+mol	mole
+Pa	pascal
+cal	calorie
+Cal	calorie
+[Kk][Cc]al	kilo-calorie
+J	joule, UNRELIABLE
+kJ	kilo-joule
+db	décibel
+dB	décibel
+
+#computer
+B	byte, UNRELIABLE
+[Kk]B	kilobyte
+MB	mégabyte
+GB	gigabyte
+TB	terabyte
+o	octet, UNRELIABLE
+[Kk][Oo]	kilo-octet
+M[Oo]	mégaoctet
+G[Oo]	gigaoctet
+T[Oo]	teraoctet
+b	bit, UNRELIABLE
+kb	kilobit
+Kb	kilobit
+Mb	mégabit
+Gb	gigabit
+Tb	terabit
+[kK][Bb][pP][sS]	kilobyte par seconde	PLURAL=kilobytes par seconde
+[kK][Oo][pP][sS]	kilo-octet par seconde	PLURAL=kilo-octets par seconde
+px	pixel
+Mpixel	mégapixel
+Gpixel	gigapixel
+
+#time
+d	jour, UNRELIABLE
+h	heure, UNRELIABLE
+min	minute
+mn	minute
+sec	seconde
+Sec	seconde
+s	seconde
+ms	milliseconde
+µs	microseconde
+
+#other
+rpm	R.P.M.
+RPM	R.P.M.
+Nm	newton mètre
+pp	page
+
+#English system
+acre	acre
+bb?l	baril
+MMbbl \/ d	million barrels per day
+doz	dozen
+F	Fahrenheit, UNRELIABLE
+fl\. oz\.	fluid ounce
+ft	pied
+gal	gallon
+[Ii]n	pouce
+nd	noeud
+kn	noeud
+lb	livre
+lbs	livre
+mi	mile
+mph	mile par heure	PLURAL=miles par heure
+[Nn][Mm][Ii]	mille nautique PLURAL=milles nautiques
+oz	once
+pt	point
+pts	points	PLURAL=points
+yd	yard
+yds	yards	PLURAL=yards

@@ -1,0 +1,26 @@
+#!/bin/bash
+# bash txt2norm.sh [-s <spec_norm_cfg_file>] <file>
+# Normalizes the input text file and outputs the nromalized form
+
+NORMA=`dirname $0`/../..
+SPEC_NORM=$NORMA/cfg/asr_ami.cfg
+while getopts ":s:" opt; do
+  case $opt in
+    s)
+      SPEC_NORM=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $(( OPTIND-1 ))
+
+$NORMA/bin/en/basic-tokenizer.pl $1 | $NORMA/bin/en/generic-normalisation.sh - | $NORMA/bin/en/specific-normalisation.pl $SPEC_NORM -
+

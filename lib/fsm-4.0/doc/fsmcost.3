@@ -1,0 +1,513 @@
+.TH FSMCOST 3 "" "Version 4.0"
+
+.SH NAMES
+SMRMember, SMREqual, SMRPlus, SMRTimes, SMRDiv, SMRClosure, SMRZero, 
+SMROne, SMRLess, SMRDelta, SMRDist, SMRDeltaQuantize, SMRHash, SMRCostToA, SMRAToCost, SMRTest, 
+SMRBoolean, SMRLog, SMRReal, SMRTrivial, SMRTropical - finite-state 
+machine cost definitions
+.PP
+.SH SYNOPSIS
+.B #include """fsm.h"""
+.PP
+.B int SMRMember(Smr smr, Cost x)
+.PP
+.B int SMREqual(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRPlus(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRTimes(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRDiv(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRClosure(Smr smr, Cost x)
+.PP
+.B Cost SMRZero(Smr smr)
+.PP
+.B Cost SMROne(Smr smr)
+.PP
+.B int SMRLess(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRDelta(Smr smr)
+.PP
+.B float SMRDist(Smr smr, Cost x, Cost y)
+.PP
+.B Cost SMRDeltaQuantize(Smr smr, Cost x, Cost delta)
+.PP
+.B size_t SMRHash(Smr smr, Cost x)
+.PP
+.B void SMRCostToA(Smr smr, char *s, Cost x)
+.PP
+.B Cost SMRAtoCost(Smr smr, char *s, char **p)
+.PP
+.B unsigned SMRTest(Smr smr, unsigned ops)
+.PP
+.B Smr SMRBoolean, SMRLog, SMRReal, SMRTrivial, SMRTropical;
+.SH DESCRIPTION
+
+This describes the costs and the corresponding operations in the FSM
+Library. Most of the automata algorithms in the library will work
+correctly if the costs and their operations form a \fIcommutative
+semiring\fR. Some algorithms such as pruning or weighted
+determinization require additional cost properties. Detailed algebraic
+requirements and mathematical justifications are given in the last
+section of this document for many of these properties.
+
+Solving one problem might require using one semiring, while another
+problem a different semiring. This library offers several common
+semirings from which the user can select. Suggestions on which
+semiring to select for a given problem are given below after the
+general definitions.  In addition, users can add new semirings to the
+library if they choose so (see \fIfsmobject(3)\fR), so long as they
+meet the conditions described below.
+.SS DEFINITIONS
+The definition of
+.I Cost
+can be any (non_void) C type specifier, but that
+can only be changed at compile time; in the default compilation
+a cost is a single-precision float. For each semiring, the following
+operations are defined:
+.PP
+.I SMRMember
+determines membership in the cost set.
+.PP
+.I SMREqual
+determines equality of costs. It is an equivalence relation.
+.PP
+.I SMRPlus
+is the additive operation of the semiring. It is an associative
+and commutative binary operation over the cost set with identity element 
+.I SMRZero. 
+It is used to combine the costs of alternative paths labeled with the
+same string.
+.PP
+.I SMRTimes
+is the multiplicative operation of the semiring. It is an
+associative and commutative binary operation over the cost set
+with identity element
+.I SMROne
+that distributes over 
+.I SMRPlus,
+and that admits
+.I SMRZero
+as an annihilator:
+.I SMREqual(s, SMRTimes(s, x, SMRZero(s)), SMRZero(s)). 
+.I SMRTimes
+is used to combine transition costs in computing path costs, or to
+combine the costs of matching paths in intersection or composition.
+.PP
+.I SMRZero
+is the identity element of
+.I SMRPlus.
+It is in the cost set.
+.PP
+.I SMROne
+is the identity element of
+.I SMRTimes.
+It is in the cost set.
+.PP
+.I SMRDiv,
+if defined for the semiring (see \fISMRTest\fR below), verifies:
+.I SMREqual(s, y, SMRDiv(s, z, x))
+if 
+.I SMREqual(s, z, SMRTimes(x, y)).
+.PP 
+.I SMRClosure
+is the limit of \fI1 + x + x^2 + x^3 + ...\fR where 1, +, and * in this series mean
+.I SMROne, 
+.I SMRPlus, 
+and 
+.I SMRTimes, 
+respectively. 
+.PP
+.I SMRLess
+is a \fIstrict\fR total order over the cost set with maximal element
+.I SMRZero
+(negative semiring) and satisfies:
+\fI!SMRLess(s, SMRTimes(s, x, z), SMRTimes(s, y, z))\fR implies 
+\fI!SMRLess(s, x, y)\fR), for all costs
+.I x, y, z
+(monotonicity).
+.PP 
+.I SMRDelta
+is an insignificant cost increment. It is used in quantization
+and in approximations.
+.PP
+.I SMRDist
+is a metric on the cost set.
+.PP
+.I SMRDeltaQuantize
+returns the nearest element to
+.I x
+in the
+.I delta
+quantization cost set. The distance to that element
+is at most
+.I delta,
+relative to the metric 
+.I SMRDist.
+.PP
+.I SMRHash
+hashes a cost to an unsigned integer.
+.PP
+.I SMRAToCost
+is used to read costs. The second argument, if non-null, is assigned
+to any unconverted portion of the input. 
+.PP
+.I SMRCostToA
+prints costs.
+.PP
+.I SMRTest
+is used to determine if a semiring supports a particular
+operation (e.g., \fISMR_DIV\fR) or has 
+a particular property (e.g., \fISMR_IDEMPOTENT\fR). It is passed 
+an unsigned int that may have any of the SMR property bits set as 
+specified in "fsmprops.h". It returns an unsigned int that has one of 
+these bits set if and only if it was
+specified in the input and that property is true for the semiring.
+.PP
+An automaton is \fIcostless\fR if all costs associated with it 
+are either \fISMRZero\fR or \fISMROne\fR. It is non-negative if all
+costs x satisfy \fISMRLess(s, SMROne(s), x)\fR or \fISMREqual(s, x, SMROne(s))\fR.
+.PP
+The following semirings are provided in the default compilation:
+.PP
+.TS H
+l l l l l l l.
+Semiring	Set	\fISMRPlus\fR	\fISMRTimes\fR	\fISMRLess\fR	\fISMRZero\fR	\fISMROne\fR
+_
+\fISMRBoolean\fR	{0, 1}	or	and	>	0	1
+\fISMRLog\fR	[-inf, inf]	-log(e^-x + e^-y)	+	<	inf	0
+\fISMRReal\fR	[0, inf]	+	*	>	0	1
+\fISMRTrivial\fR	{0}	+	+	!=	0	0
+\fISMRTropical\fR	[-inf, inf]	min	+	<	inf	0
+.TE
+.SS SELECTING A SEMIRING
+The following are suggestions for selecting a semiring for a given problem.
+.PP
+.I Tropical Semiring:
+In a typical use of this semiring, the costs represent
+negative log probabilities. When multiple paths are identically
+labelled, the tropical semiring selects only the minimum cost (highest
+probability) path (this is often called the \fIViterbi\fR
+approximation), which allows the notion of a best (or \fIshortest\fR)
+path to be defined. To represent an unweighted automaton using the
+tropical semiring, the costs can be restricted to just 0
+(\fISMROne\fR) and infinity (\fISMRZero\fR). This versatile semiring
+was the only one provided in earlier versions of the FSM library 
+(in the default compilation). It is the default semiring in this version 
+of the library.
+.PP
+.I Log Semiring:
+This semiring is appropriate to select when the costs represent
+negative log probabilities and when identically labelled paths are to
+be combined by summing their probabilities rather than taking only the
+highest probability path as done by the tropical semiring. The
+advantage is that summation preserves the probabilistic interpretation
+of an automaton. The disadvantage is that \fISMRPlus\fR no longer
+induces the notion of a best path, so path algorithms are not
+defined in this semiring.
+.PP
+.I Real Semiring:
+This semiring can be used when probabilities rather than
+log probabilities are desired. This is especially useful when
+producing graphical output easily interpreted by humans. This semiring
+is isomorphic under the -log function to the log semiring. However,
+it is in many cases numerically less stable than
+the log semiring.
+.PP
+.I Boolean Semiring:
+This semiring is a natural choice when the automata are
+unweighted. It is isomorphic under the -log function to the subsemiring of the tropical
+semiring restricted to 0 and infinity, also
+commonly used to represent unweighted machines in this library.
+.PP
+In some cases, the user will wish to switch semirings in the course
+of solving a problem. Be aware that the costs are not modified when
+changing semirings with, e.g., \fIfsmconvert(1)\fR, they are simply reinterpreted 
+in the new semiring. E.g., you may first need to use \fIfsmarith\fR (see \fIfsmintro(1)\fR) to 
+remap the costs when changing between the \fIlog\fR and \fIreal\fR semirings.
+.PP
+.SS ALGEBRAIC REQUIREMENTS
+.PP
+This section provides detailed definitions and justifies the semiring requirements mentioned previously
+as well as more specific ones for some of the algorithms of the FSM
+library. 
+.PP
+.I Semiring 
+.PP
+A system 
+.I (K, +, *, 0, 1)
+is a 
+.I semiring 
+if
+.I (K, +, 0) 
+is a commutative monoid with identity element
+.I 0,
+.I (K, *, 1) 
+is a monoid with identity element
+.I 1,
+such that
+.I * 
+distributes over 
+.I +:
+.I (x + y) * z = (x * z) + (y * z) and z * (x + y) = (z * x) + (z * y),
+for all 
+.I x, y, z 
+and 
+.I 0 
+is an annihilator:
+.I x * 0 = 0 * x = 0,
+for all 
+.I x.
+Thus, a semiring is a ring that may lack negation. The definition of
+rational operations (union, concatenation, closure) requires the cost set
+and the corresponding operations to form a semiring.
+.PP
+.I Commutativity 
+.PP
+A semiring is 
+.I commutative 
+if
+.I x * y = y * x
+for all
+.I x, y
+in 
+.I K.
+Commutativity is required for the efficiency of the composition and
+intersection algorithms.
+.PP
+.I Total Order
+.PP
+A total order 
+.I <
+is necessary to compare two arbitrary costs in several
+algorithms: pruning, arc-sorting, quantization.
+.PP
+.I Monotonicity
+.PP
+.I K
+is 
+.I monotonic
+if
+.I (x < y)
+implies
+.I (x * z) < (y * z)
+and
+.I (z * x) < (z * y).
+This property is required in particular for efficient shortest-paths
+algorithms. Consider indeed two paths from the initial state to the
+same state
+.I q
+with costs
+.I x
+and
+.I y,
+and a path of cost
+.z from 
+.I q
+to a final state. In order to use the classical relaxation
+technique, one must assume that it is enough to compare the
+costs
+.I x
+and
+.I y
+to determine the smallest of
+.I x * z
+and
+.I y * z.
+Similarly, the property is required for efficient pruning algorithms.
+.PP
+.I Negativity
+.PP
+A semiring
+.I K
+is
+.I negative
+if
+.I 1 < 0.
+When
+.I K
+is monotonic, this implies:
+.I x < 0
+for all
+.I x
+in
+.I K.
+Negativity is not a necessary condition for most algorithms of the
+library.  It is imposed in the current version of the library because
+paths algorithms such as pruning or n-best paths algorithms are not
+defined appropriately for positive semirings. The negativity condition might
+be relaxed in future versions.
+.PP
+.I Weak Divisibility
+.PP 
+.I K 
+is 
+.I weakly divisible 
+if for any 
+.I x 
+and 
+.I y
+in 
+.I K
+such that 
+.I x + y != 0, 
+there exists
+.I z 
+such that
+.I x = (x + y) z,
+and for any
+.I x 
+and 
+.I y
+in 
+.I K
+such that 
+.I x!= 0,
+there exists
+.I z'
+such that
+.I x z' = (x + y).
+.I z
+and
+.I z'
+are denoted by:
+.I (x + y)^-1 x
+and
+.I x^-1 (x + y).
+They are assumed to be possible to find and to be found
+in a way such that all corresponding formula be
+consistent, for example:
+.I (ux + uy)^{-1} ux = (x + y)^{-1} x
+for any 
+.I x, y, u
+in 
+.I K
+such that
+.I ux + uy != 0
+and
+.I x + y != 0.
+The first property is needed for weighted determinization, both are
+needed for pushing. For example, in weighted determinization,
+.I x
+and 
+.I y
+may correspond to the costs of two paths from the initial
+state to two distinct states labeled with the same string.
+The remainder associated to the state reached by the path
+with cost 
+.I x
+is exactly
+.I z.
+.PP
+.I Divisor of Zero
+.PP
+Testing the equivalence of deterministic weighted automata
+requires eliminating all paths of cost 0 from the machines
+tested. The complexity of the algorithm for removing 0-cost
+paths can be exponential in the worst case if the semiring
+contains divisors of 0, that is non-zero costs
+.I x
+and
+.I y
+such that
+.I xy = 0.
+To keep the equivalence algorithm efficient, the semiring
+is assumed not to contain any divisor of zero.
+.PP
+.I k-Closedness
+.PP
+A semiring is 
+\fIk\fR-closed when for any 
+.I x
+in 
+.I K,
+1 + x + x^2 + ... + x^(k + 1) = 1 + x + x^2 + ... + x^k. 
+The general shortest-distance algorithm currently used in the FSM
+library requires the semiring to be \fIk\fR-closed for the automaton
+considered, or such that that equality holds with some approximation.
+.PP
+.I Path Multiplicity
+.PP
+The general single-source shortest-paths algorithm of the FSM library
+requires, for consistency, the existence of a path with cost equal to
+the shortest distance. This must be indicated with the flag
+.I SMR_PATH.
+Otherwise, shortest-paths programs return an error.
+.PP
+.I Idempotency
+.PP
+The library does not assume that the semirings used are idempotent,
+but the user is advised that when K is idempotent
+.I (1 + 1 = 1),
+the choice of the order relation is very restricted. Indeed, when it
+is idempotent, one can define a partial order called the
+.I natural order
+of
+.I K
+defined by:
+.I x < y 
+iff
+.I x + y = x.
+If 
+.I K 
+is monotonic and negative for a given partial order, then it can be
+proved that that order coincides with the natural order.
+.PP
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM C accessors.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I dst(3)
+Data structures library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/include/dst-4
+Distribution data structures include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution FSM library.
+.TP 3.5i
+.I /n/lvr/linux/lib/libdst-4.a
+Distribution data structures library.
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

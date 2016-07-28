@@ -1,0 +1,718 @@
+.TH FSM 3 "" "Version 4.0"
+
+.SH NAMES
+
+FSMLoad, FSMDump, 
+FSMUnion, FSMConcat, FSMClosure, FSMReverse,  FSMInvert, FSMProject, 
+FSMIntersect, FSMCompose, FSMDifference, 
+FSMConnect, FSMDeterminize, FSMPush, FSMMinimize, FSMArcSum,
+FSMEncode, FSMDecode, FSMQuantize, FSMEquiv,
+FSMRmEpsilon, FSMSynchronize, FSMEpsNormalize, 
+FSMBestPath, FSMBestPaths, FSMPrune, 
+FSMCopy, FSMConvert, FSMCache, FSMForce, FSMFree,
+FSMArcSort, FSMTopSort, FSMTest, FSMVerify
+- finite-state machine 
+C library
+.PP
+.SH SYNOPSIS
+\fB#include "fsm.h"
+.PP
+\fBtypedef enum { FSMNorm, FSMDestruct, FSMDelay } FSMModes;
+.PP
+\fBFsm FSMLoad(char *file)
+.PP
+\fBvoid FSMDump(char *file, Fsm fsm)
+.PP
+\fBFsm FSMUnion(Fsm fsm1, Fsm fsm2, FSMModes mode)
+.PP
+\fBFsm FSMConcat(Fsm fsm1, Fsm fsm2, FSMModes mode)
+.PP
+\fBFsm FSMClosure(Fsm fsm, int pos, FSMModes mode)
+.PP
+\fBFsm FSMReverse(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMInvert(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMProject(Fsm fsm, int index, FSMModes mode)
+.PP
+\fBFsm FSMIntersect(Fsm fsm1, Fsm fsm2, FSMModes mode)
+.PP
+\fBFsm FSMCompose(Fsm fsm1, Fsm fsm2, FSMModes mode)
+.PP
+\fBFsm FSMDifference(Fsm fsm1, Fsm fsm2, FSMModes mode)
+.PP
+\fBFsm FSMConnect(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMDeterminize(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMPush(Fsm fsm, unsigned flags, FSMModes mode);
+.PP
+\fBFsm FSMMinimize(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMArcSum(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMEncode(Fsm fsm, Fsm *key, unsigned flags, FSMModes mode);
+.PP
+\fBFsm FSMDecode(Fsm fsm, Fsm key, unsigned flags, FSMModes mode);
+.PP
+\fBint FSMQuantize(Fsm fsm1, float delta, FSMModes mode)
+.PP
+\fBint FSMEquiv(Fsm fsm1, Fsm fsm2)
+.PP
+\fBFsm FSMRmEpsilon(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMSynchronize(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMEpsNormalize(Fsm fsm, FSMModes mode)
+.PP
+\fBFsm FSMBestPath(Fsm fsm)\fR
+.PP
+\fBFsm FSMBestPaths(Fsm fsm, int nbest, Cost cthresh, int nthresh, int uniq)\fR
+.PP
+\fBFsm FSMPrune(Fsm fsm, Cost cthresh, int nthresh, FSMModes mode)\fR
+.PP
+\fBFsm FSMCopy(Fsm fsm, FSMClass clas)\fR
+.PP
+\fBFsm FSMConvert(Fsm fsm, FSMClass clas, Smr smr)\fR
+.PP
+\fBFsm FSMCache(Fsm fsm, FSMClass clas, int cache_size)\fR
+.PP
+\fBFsm FSMForce(Fsm fsm)\fR
+.PP
+\fBvoid FSMFree(Fsm fsm)\fR
+.PP
+\fBFsm FSMArcSort(Fsm fsm, 
+.RS .5in
+\fBint (*compar(void *data, FSMArc *, FSMArc *), void *data, FSMModes mode)\fR
+.RE
+.PP
+\fBFsm FSMTopSort(Fsm fsm, 
+.RS .5in
+\fBint (*filter)(Fsm fsm, int i, FSMArc *), FSMModes mode)\fR
+.RE
+.PP
+\fBunsigned int FSMTest(Fsm fsm, unsigned int props)\fR
+.PP
+\fBvoid FSMVerify(Fsm fsm, char *src)\fR
+.PP
+.SH DESCRIPTION
+These functions read, write, 
+combine, minimize, and search 
+.I weighted finite-state machines (FSMs).
+Two types of machines are supported,
+.I acceptors
+and
+.I transducers. 
+.I fsmaccess(3) defines
+the user-accessible components of FSM objects (states, start state, arcs
+(transition), input symbols, output symbols, arc costs, final costs and
+final states) and the functions that create, access, and mutate such objects.
+.PP
+Many of these functions can operate in three different modes -
+.I constructive,
+.I destructive,
+and
+.I delayed, 
+specified by the 
+.I FSMModes
+argument values
+.I FSMNorm,
+.I FSMDestruct,
+and
+.I FSMDelay,
+respectively.
+In constructive mode, the function returns a newly constructed FSM
+and makes no modification to its input FSMs.
+In destructive mode, the function is permitted to 
+modify its 
+.I first 
+FSM argument, possibly
+reusing its storage, saving computation and memory. It 
+frees any residual storage in that FSM argument.
+In delayed mode, the function is permitted to delay computation of
+some states or arcs of the returned FSM until those parts are accessed. While
+arguments to a delayed operation are not modified, they should not be
+passed to destructive operations until the returned FSM
+is first freed (see \fIFSMFree\fR).
+.PP
+For convenience, all functions that have an 
+.I FSMModes 
+argument can take all three modes as input. However, the
+specification of this argument should be viewed merely as licensing
+the function to reuse its input or delay its output, and not as a
+guarantee that the algorithm(s) used to implement the function will,
+in fact, do so. For example, a function may be implemented solely by
+a destructive algorithm, and if given any mode other than
+.I FSMDestruct 
+or if given non-mutable input FSM, it might simply copy the input FSM first.
+For each function that takes an
+.I FSMModes
+argment, we indicate (in parentheses) which
+kind(s) of algorithm are indeed used to implement it.
+The experienced user may wish to select a mode that matches these capabilities
+to obtain the greatest efficiency. On the other hand, the novice can
+simply use
+.I FSMNorm,
+since this mode does not require the care in storage and data-flow
+management that the others do.
+.SS FSM I/O
+.I FSMLoad
+loads an FSM from the file named
+.I file.
+If
+.I file
+is NULL, 
+it reads from standard input.
+.PP
+.I FSMDump
+writes an FSM to the file named
+.I file.
+If
+.I file
+is NULL,
+it writes to standard output.
+.SS FSM CONSTRUCTION AND COMBINATION
+.I FSMUnion
+returns the union of 
+.I fsm1
+and 
+.I fsm2.
+(Algorithms: destructive, delayed)
+.PP
+.I FSMConcat
+returns the concatenation of 
+.I fsm1
+and
+.I fsm2
+(in that order). (Algorithms: destructive, delayed)
+.PP
+.I FSMClosure
+returns the Kleene closure of the input 
+.I fsm. 
+If 
+.I pos
+is non-zero, the empty string is not added, that is,
+Kleene ``+'' is used instead of Kleene ``*''. (Algorithms: destructive, delayed)
+.PP
+.I FSMReverse
+reverses
+.I fsm.
+The input FSM accepts string 
+.I a1 ... aN 
+iff 
+the output FSM accepts 
+.I aN ... a1 
+(and similarly for transducers).
+(Algorithm: destructive)
+.PP
+.I FSMInvert
+inverts a transducer, that is,
+.I fsm
+transduces string 
+.I s1 
+to 
+.I s2 
+iff the output FSM
+transduces string 
+.I s2 
+to 
+.I s1. 
+It does so by tranposing the input and
+output symbols on each transition.
+(Algorithms: destructive, delayed)
+.PP
+.I FSMProject
+converts a transducer into an acceptor by retaining only the
+input (with \fIindex = 1\fR) or output (with \fIindex = 2\fR)
+symbol on each transition.
+(Algorithms: destructive, delayed)
+.PP
+.I FSMIntersect
+returns the intersection of the acceptors
+.I fsm1 
+and 
+.I fsm2.
+Both input acceptors contain string 
+.I s
+iff the output acceptor contains 
+.I s
+with the two costs combined by \fISMRTimes\fR (see \fIfsmcost(3)\fR).
+(Algorithm: delayed)
+.PP 
+.I FSMCompose
+returns the relational composition of the FSMs
+.I fsm1
+and
+.I fsm2
+(in that order). If
+.I fsm1
+transduces string
+.I s1
+to
+.I s2
+and
+.I fsm2
+transduces
+.I s2 
+to 
+.I s3,
+then the output FSM will transduce
+.I s1
+to 
+.I s3
+with the two costs combined by \fISMRTimes\fR (see \fIfsmcost(3)\fR).
+If an input machine is an acceptor, it is treated
+as a transducer from the language it accepts to itself.
+(Algorithm: delayed)
+.PP
+.I FSMDifference 
+returns the intersection of the acceptor
+.I fsm1 
+with the complement of the costless, deterministic, epsilon-free acceptor
+.I fsm2. 
+(Algorithm: delayed)
+.SS FSM MINIMIZATION AND EQUIVALENCE
+Two acceptors are equivalent if they accept the same strings with the
+same costs; two transducers are equivalent if they transduce the
+same input strings to the same output strings with the same costs.
+.PP
+.I FSMConnect
+returns an equivalent FSM from which
+any states in the input that do not lie on a path from the start 
+state to a final state have been removed.
+(Algorithms: constructive, destructive)
+.PP
+.I FSMDeterminize
+returns a deterministic FSM that is equivalent to
+.I fsm,
+which must be determinizable.
+Epsilon arcs are treated the same as other symbols. (Algorithm: delayed)
+.PP
+.I FSMPush
+returns a 
+.I pushed 
+FSM equivalent to the input. With the \fIFSM_PUSH_CSTS\fR flag, the
+topology of the input FSM is unchanged and the \fISMRPlus\fR-sum of
+the costs of the outgoing arcs (with the \fIFSM_PUSH_TO_INITIAL\fR
+flag) or incoming arcs (with \fIFSM_PUSH_TO_FINAL\fR) at each state
+equals \fISMROne\fR. By default, the \fIresidual cost\fR (the \fISMRPlus-sum\fR
+of cost of all complete paths) is placed final --
+the original final costs are \fISMRTimes\fR-multiplied by this
+cost. With \fIFSM_PUSH_RCST_INITIAL\fR, the residual cost is instead
+placed initial -- the cost of each arc leaving the initial state is
+\fISMRTimes\fR-multiplied by this residual cost. With the
+\fIFSM_PUSH_RCST_REMOVE\fR option, the residual cost is removed.
+.br
+With the \fIFSM_PUSH_LABS\fR option, output labels are
+.I pushed 
+as much as possible towards the initial state (with
+\fIFSM_PUSH_TO_INITIAL\fR) or the final states (with
+\fIFSM_PUSH_TO_FINAL\fR): in particular, with
+\fIFSM_PUSH_TO_INITIAL\fR, the longest common prefix of the output
+labels of outgoing paths at non-initial states with out-degree more
+than one is epsilon. With \fIFSM_PUSH_TO_FINAL\fR, this property holds
+with the reverse of the FSM. With \fIFSM_PUSH_EPS_LABS\fR, output
+labels are pushed as much as possible without changing the
+topology of the input FSM.
+(Algorithm: destructive)
+.PP 
+.I FSMMinimize
+returns the minimal deterministic FSM equivalent to the input FSM,
+which must be a deterministic acceptor. Epsilon arcs are treated the same as 
+other symbols.
+(Algorithm: destructive)
+.PP
+.I FSMArcSum
+uses \fISMRPlus\fR
+to combine the costs (see \fIfsmcost(3)\fR) on identically-labelled arcs 
+between the same source and destination states.
+(Algorithm: destructive)
+.PP
+.PP
+.I FSMEncode
+with the \fIFSM_ENCODE_LABS\fR flag represents a transducer as an
+acceptor over the alphabet of pairs of input labels and output labels
+by encoding each distinct input label and output label pair of an arc 
+as a new label in the output FSM. 
+.I FSMEncode
+with the \fIFSM_ENCODE_CSTS\fR flag represents a weighted FSM 
+as an unweighted one
+by encoding each input label and cost pair of an arc as a new label in the output FSM. 
+With the \fIFSM_ENCODE_CSTS|FSM_ENCODE_LABS\fR flags together, 
+weighted transducers can be represented
+as unweighted acceptors.
+In each case, the mapping from each input label and output label and/or cost
+to its encoding is stored as an FSM in the location pointed to by \fIkey\fR. 
+If that location is initially non-zero,
+.I FSMEncode
+will first use the encodings specified in 
+the key fsm there for any matching arc labelings.
+(Algorithm: delayed)
+.PP
+.I FSMDecode
+decodes an encoded FSM if the same set of flags
+and key FSM is given as used in its encoding.
+(Algorithm: delayed)
+.PP 
+.I FSMQuantize
+replaces each cost in an FSM with the distinquished element
+of its delta-quantization block (see \fIfsmcost(3)\fR). 
+(Algorithm: destructive)
+.PP
+.I FSMEquiv
+returns 1 if
+.I fsm1
+and
+.I fsm2
+are equivalent, and 0 otherwise. 
+The inputs must be deterministic,
+epsilon-free acceptors.
+.SS FSM EPSILON OPERATIONS
+.I FSMRmEpsilon
+returns an FSM equivalent to
+.I fsm
+that is epsilon removed. For an acceptor, this means
+there are no epsilon transitions. For a transducer,
+this means there are no paired input-output epsilon transitions. 
+(Algorithms: constructive, delayed)
+.PP
+.I FSMSynchronize
+returns an FSM equivalent to 
+.I fsm
+in which the input and output labels are
+.I synchronized.
+For a transducer, this means as any path is traversed, its \fIdelay\fR
+is either zero or increases strictly monotonically -- the delay of a
+path is the difference between the number of non-epsilon labels
+encountered on the output side and those encountered on the input
+side.  The input transducer must have bounded delays, that is the
+delay of any cycle must be zero. All acceptors are already
+synchronized. The worst case time and space complexity of the
+algorithm is
+.I O(O((|Q| + |E|)(|A|^|d| + |B|^|d|))),
+where
+.I Q
+is the set of states of the input transducer,
+.I E
+its transition set, 
+.I A
+its input alphabet,
+.I B
+its output alphabet and 
+.I |d|
+the maximum delay (in absolute value) of a path of the input transducer.
+(Algorithm: delayed)
+.PP
+.I FSMEpsNormalize
+returns an FSM equivalent to
+.I fsm
+that is epsilon normalized.
+For an acceptor, this is the same as being epsilon removed 
+(see \fIFSMRmEpsilon\fR in \fIfsm(3)\fR). For a transducer, it is 
+epsilon removed and has the following additional property.
+With the \fI-i\fR or \fI-1\fR flag, 
+a transition with an epsilon input label 
+is never followed on a path by a transition 
+with a non-epsilon input label.
+With the \fI-o\fR or \fI-2\fR flag, the corresponding
+property is true for the output labels.
+The input FSM must be epsilon-normalizable.
+(Algorithm: delayed)
+.SS FSM SEARCH
+.I FSMBestPath 
+returns the lowest-cost path from the initial state of
+.I fsm
+to a final state, encoded as an FSM.
+This 
+operation is not defined for non-idempotent semirings.
+.PP
+.I FSMBestPaths
+returns 
+the 
+.I nbest
+lowest-cost paths from the initial state of
+.I fsm
+to a final state. 
+The output is encoded as an FSM that is the union
+of the individual paths in increasing cost order.
+The arguments
+.I cthresh
+and
+.I nthresh
+limit the nbest search
+by pruning the input FSM
+as in 
+.I FSMPrune.
+If
+.I uniq
+is non-zero, then all paths returned will be distinct strings.
+The
+.I FSMBestPaths
+operation is not defined for for semirings that do not
+have the \fISMR_PATH\fR property (see \fIfsmcost(3)\fR).
+.PP
+.I FSMPrune
+returns those states and arcs
+that lie on successful paths whose costs in
+.I fsm
+is within 
+.I cthresh
+of the lowest cost path and at most the
+.I nthresh
+best such states.
+.SS FSM COPYING AND STORAGE MANAGEMENT
+An FSM's internal representation is determined by its
+.I FSMClass. 
+You can use
+.I FSMBasicClass 
+for general-purpose FSMs. 
+See \fIfsmclass(3)\fR for more information on FSM classes. 
+.PP
+.I FSMCopy
+copies an FSM, returning an FSM of class
+.I class. 
+It leaves the input FSM unmodified.
+.PP
+.I FSMConvert
+converts an FSM into representation class
+.I class
+and semiring
+.I smr.
+It frees any residual storage in the input FSM.
+Note the costs are not modified when changing semirings, they
+are simply reinterpreted in the new semiring.
+.PP
+.I FSMCache
+is a delayed copy. It will expand each state of the input FSM at most once
+until 
+.I cache_size
+arcs are cached. After that
+states may be re-expanded to keep the number of cached arcs
+near the target cache size.
+The copy is stored 
+in an FSM of the given
+.I class,
+which must be mutable (see \fIfsmclass(3)\fR). 
+.PP
+.I FSMForce
+forces a cached FSM by expanding all its states and converting
+the result to the class passed to
+.I FSMCache.
+.PP
+.I FSMFree
+frees all storage associated
+with
+.I fsm,
+destroying it.  The actual freeing of storage may be internally delayed 
+until other FSMs that depend on it are first freed.
+.SS MISCELLANEOUS
+.I FSMArcSort
+sorts the input FSM arcs according to the 
+.I compar
+function, which
+is called with the data pointer (see below) and
+with a pointer to each of the two arcs being compared.
+It should return an integer less than, 
+equal to, or greater than zero, when 
+the first arc is less than, equal to, or greater than the second, 
+respectively. The 
+.I data
+argument is a void pointer to arbitrary user-defined data, which
+is passed to the comparison function.
+The following comparison functions are provided:
+.I FSMILabelCmp
+sorts by the arc input label (then the by the output label, then 
+by the next state) (default);
+.I FSMOLabelCmp
+sorts first by the arc output label  (then by the input label, then
+by the next state); and
+.I FSMArcCostCmp
+sorts by the arc cost. All sort from least to greatest.
+(Algorithms: destructive, delayed)
+.PP
+.I FSMTopSort
+topologically sorts the input FSM according to the 
+.I filter
+function. The 
+.I filter 
+function should return 1 if the arc should be sorted
+and 0 otherwise. For each arc in the output
+from state \fIi\fR to state \fIj\fR for which the filter returns 1,
+\fIi\fR < \fIj\fR holds). If there is a cycle of arcs for which the filter 
+returns 1, 
+.I FSMTopSort
+returns the input FSM unsorted. The following filters are provided:
+.I FSMAnyArcFilt
+does a full topological sort; 
+.I FSMEpsArcFilt
+topologically sorts with respect to (i/o) epsilons, and
+.I FSMIEpsArcFilt
+topologically sorts with respect to the input epsilons.
+(Algorithm: destructive)
+.PP
+.I FSMTest
+is used to determine if an FSM has a particular property, such
+as whether it is cyclic, costless, non-negative, or deterministic.
+It is passed an unsigned int that may have any of the FSM property
+bits set as specified in "fsmprops.h". 
+It returns an unsigned int that has one of these 
+bits set if and only if it was specified in the input and that
+property is true for the FSM. 
+.I FSMTest
+first calls \fIFSMProps (fsmaccess(3))\fR on the FSM 
+to check any stored information about these properties. For any
+unknown property information, explicit tests are run on the FSM to 
+determine their validity. If the FSM supports \fIFSMSetProps (fsmaccess(3))\fR,
+it is then called to set the stored information about the 
+tested properties.
+.PP
+.I FSMVerify
+tests if an FSM is well-formed. If it is not, an error
+is signalled. User-provided SRC is used in error messages.
+.PP
+.SH DIAGNOSTICS
+The DST system handle interface (\fIdstsys(3)\fR) is 
+used for memory allocation and error handling (see \fIdstsys(3)\fR).
+The default system handler in the FSM library is 
+.I FSMDefaultHandle,
+which for fatal errors prints a
+diagnostic string on standard error and then calls exit(1).
+.SH CAVEATS
+.PP
+If 
+.I FSMDump 
+is called with a user-defined FSM class (i.e., 
+not among the pre-defined classes in \fIfsmclass(3)\fR),
+it outputs 
+.I FSMBasicClass. 
+.PP
+.I FSMIntersect,
+.I FSMDifference,
+and
+.I FSMCompose
+call 
+.I FSMConnect
+before returning,
+except when called with mode
+.I FSMDelay.
+For example,
+.I FSMIntersect(fsm1, fsm2, FSMNorm)
+is equivalent
+to 
+\fIFSMConnect(FSMIntersect(fsm1, fsm2, FSMDelay), FSMDestruct)\fR.
+Space is allocated only for those arcs that will be 
+ultimately output. This, however, requires two passes over
+accessible states and arcs. With
+\fIFSMConnect(FSMConvert(FSMIntersect(fsm1, fsm2, FSMDelay), FSMBasicClass), FSMDestruct)\fR
+only one pass is needed (which can thus be twice as fast), but 
+now space is consumed 
+even by arcs that may not be in the output FSM.
+.PP
+For best performance,
+.I FSMIntersect,
+.I FSMDifference,
+and
+.I FSMCompose
+should have indexed FSM classes as input or internal conversions
+must be done. See \fIfsmclass(3)\fR for more information.
+.PP
+Some functions have a variant format that take a pointer to an options structure;
+for example, 
+.PP
+.RS .5in
+\fIFsm FSMOptCompose(Fsm, Fsm, FSMComposeOptions *)\fR.
+.RE
+.PP
+Further, there are functions to create default option structures; for example,
+.PP
+.RS .5in
+\fIFSMComposeOptions FSMDefaultComposeOptions(void)\fR
+.RE
+.PP
+The options structures are used to pass additional parameters to the functions
+and are used by the FSM binary executables (\fIfsm(1)\fR) to provide the various
+command line options. See the include file "fsmoptions.h" for further information.
+.PP
+.I FSMSynchronize,
+.I FSMEpsNormalize,
+and
+.I FSMDeterminize
+may not terminate if there is no equivalent FSM that admits the desired
+property. 
+.I FSMSynchronize,
+.I FSMEpsNormalize,
+and
+.I FSMDeterminize
+are otherwise worst-case exponential in time and space.
+However, many practical cases are well-behaved.
+.PP
+Over non-idempotent semirings (see \fIfsmcost(3)\fR),
+.I FSMRmEpsilon,
+.I FSMPush,
+and
+.I FSMPrune
+may not terminate if there is no equivalent FSM that admits the desired
+property.	 
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsmaccess(3)
+FSM C accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I dst(3)
+Data structures library.
+.TP 3.5i
+.I dstsys(3)
+Memory allocation and error handling utilities.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/include/dst-4
+Distribution data structures include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution FSM library.
+.TP 3.5i
+.I /n/lvr/linux/lib/libdst-4.a
+Distribution data structures library.
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

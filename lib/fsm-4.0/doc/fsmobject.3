@@ -1,0 +1,399 @@
+.TH FSMOBJECT 3 "" "Version 4.0"
+
+.SH NAMES
+Fsm, FSMClass, FSMCreateObject, Smr - 
+FSM object definitions
+.PP
+.SH SYNOPSIS
+.B #include """fsm.h"""
+.PP
+\fBtypedef enum { FSMAccep, FSMTrans } FSMTypes;
+.PP
+.B typedef struct smr_rec { 
+.RS .5i
+\fBchar *name;
+.br
+\fBint id;
+.br
+\fBvoid *data;
+.br
+\fBCost zero;
+.br
+\fBCost one;
+.br
+\fBCost (*plus)(Smr, Cost, Cost);
+.br
+\fBCost (*times)(Smr, Cost, Cost);
+.br
+\fBCost (*closure)(Smr, Cost);
+.br
+\fBCost (*div)(Smr, Cost, Cost);
+.br
+\fBint (*equal)(Smr, Cost, Cost);
+.br
+\fBint (*less)(Smr, Cost, Cost);
+.br
+\fBint (*member)(Smr, Cost);
+.br
+\fBunsigned int props;
+.RE
+} *Smr;
+.PP
+.B typedef struct fsm_arcs_class_rec { 
+.RS .5i
+\fBFSMArc *(*nextarcs)(FSMArcsIter *);
+.br
+\fBvoid (*close)(FSMArcsIter *);
+.br
+\fBvoid (*reset)(FSMArcsIter *);
+.br
+\fBvoid (*seekpos)(FSMArcsIter *, int pos);
+.br
+\fBint (*seekeps)(FSMArcsIter *);
+.br
+\fBint (*seeknoneps)(FSMArcsIter *);
+.br
+\fBint (*seeklabel)(FSMArcsIter *, int label);
+.RE
+.B } *FSMArcsClass;
+.PP
+.B typedef struct { 
+.RS .5i
+\fBFSMArc *arcsmin, *arcs, *arcsmax;
+.br
+\fBvoid *data;
+.br
+\fBFSMArcsClass *clas;
+.RE
+.B } *FSMArcsIter
+.PP
+.B typedef struct fsm_class_rec {
+.RS .5i
+.B char* name;
+.br
+.B int id;
+.br
+\fBint (*numstates)(Fsm fsm);
+.br
+\fBint (*start)(Fsm fsm);
+.br
+\fBCost (*final)(Fsm fsm, int state);
+.br
+\fBCost (*potential)(Fsm fsm, int state);
+.br
+\fBint (*numarcs)(Fsm fsm, int state);
+.br
+\fBint (*numinputeps)(Fsm fsm, int state);
+.br
+\fBint (*numoutputeps)(Fsm fsm, int state);
+.br
+\fBint (*arcs)(Fsm fsm, int state, FsmArc **arcs);
+.br
+\fBFSMArcsIter (*arcsopen)(Fsm *, int i);
+.br
+\fBvoid (*free)(Fsm fsm);
+.br
+\fBunsigned (*props)(Fsm fsm, unsigned *sprops);
+.br
+\fBvoid (*settype)(Fsm fsm, FSMTypes type);
+.br
+\fBvoid (*setsmr)(Fsm fsm, Smr smr)
+.br
+\fBvoid (*setstart)(Fsm fsm, int state);
+.br
+\fBvoid (*setfinal)(Fsm fsm, int state, Cost cost);
+.br
+\fBvoid (*setpotential)(Fsm fsm, int state, Cost cost);
+.br
+\fBvoid (*addstates)(Fsm fsm, int n);
+.br
+\fBvoid (*deletestates)(Fsm fsm, int *states, int n);
+.br
+\fBvoid (*setarcs)(Fsm fsm, int state, FSMArc *arcs, int n);
+.br
+\fBvoid (*addarcs)(Fsm fsm, int state, FSMArc *arcs, int n);
+.br
+\fBvoid (*setprops)(Fsm fsm, unsigned hprops, unsigned sprops);
+.br
+\fBFsm *(*copy)(Fsm *, FSMClass clas, SYSHandle hdl);
+.br
+\fBFsm *(*read)(FILE *, FSMClass clas, Smr smr, FSMReadOptions *);
+.br
+\fBvoid (*write)(FILE *, Fsm, FSMClass clas, FSMWriteOptions *);
+.br
+\fBunsigned cprops;
+.RE
+.B } *FSMClass;
+.PP
+.B typedef struct { 
+.RS .5i
+\fBvoid *data;
+.br
+\fBFSMTypes type;
+.br
+\fBFSMClass clas;
+.br
+\fBSmr smr;
+.br
+\fBSYSHandle hdl;;
+.br
+\fBint refcnt;
+.br
+.RE
+.B } *Fsm;
+.PP 
+\fBFsm FSMCreateObject(void *data, FSMTypes type, FSMClass clas, Smr smr, SYSHandle hdl)
+.PP
+.SH DESCRIPTION
+.SS FSM REPRESENTATION
+The internal representation of an FSM is object-oriented. 
+It consists of a void pointer to
+.I data,
+which represents any internal data for the FSM, the 
+.I type
+of FSM (\fIFSMAccep\fR or \fIFSMTrans\fR), the representation
+.I clas 
+of the FSM, the semiring
+.I smr,
+the memory allocation and error handler
+.I hdl,
+and 
+.I refcnt,
+a reference count used to decide when to free the FSM.
+Most users may simply wish to use FSMs of the classes described in
+\fIfsmclass(3)\fR.
+In some cases, users may want to define 
+a new FSM class to provide FSMs with a new kind of
+internal format or representing a new kind of delayed
+computation.  With
+.I FSMCreateObject,
+one can create an FSM of a new class
+by specifying, as arguments, the
+.I data,
+.I type,
+the new
+.I clas
+desired,
+the semiring
+.I smr,
+and the memory allocation and error handler
+.I hdl,
+(the FSM library default is \fIFSMDefaultHandle\fR).
+It returns the new FSM. 
+.PP
+The new class should be a pointer to a
+.I fsm_class_rec
+structure that consists of pointers to functions that are called when 
+the FSM is accessed or mutated (see \fIfsmaccess(3)\fR). 
+For example, 
+.I FSMStart
+is defined in \fI"fsmaccess.h"\fR (included by \fI"fsm.h"\fR) as:
+.PP
+.RS
+\f(CW#define FSMStart(fsm) ((fsm)->clas.start)(fsm)\fR
+.RE
+.PP
+For each of these class functions, called here \fImethods\fR, there is a 
+corresponding accessor/mutator defined in \fI"fsmaccess.h"\fR and
+documented in \fIfsmaccess(3)\fR or \fIfsm(3)\fR.
+A user-defined class must at least support the 
+.I required
+subset of methods, namely:
+\fIstart, final, statelabel, arcs\fR, and \fIfree\fR
+(which correspond to the required operations defined 
+in \fIfsmaccess(3)\fR). If these methods perform the
+operations as documented in \fIfsmaccess(3)\fR,
+the newly created FSM will work correctly for all the
+library functions defined in \fIfsm(3)\fR. It is recommended that the 
+FSM class also 
+support any of the optional methods that it can perform efficiently.
+Doing so advertises to the library functions the FSM class's
+capabilities and allows, in many cases, more efficient algorithms 
+to be used. If an optional method is not supported, its
+component in the fsm_class_rec structure should be assigned to
+NULL or, preferably, to the standard error-signalling methods found 
+in \fI"fsmmethods.h"\fR (included by \fI"fsm.h"\fR).  The
+.I name
+component should be set to a null-terminated string that describes
+the class. The
+.I id
+component should be set to 
+.I FSM_NO_ID
+unless there is a file format ID reserved for this class 
+(see \fI"fsmprops.h"\fR).
+The
+.I cprops
+component, which is inspected by \fIFSMTestClass (fsmclass(3))\fR,
+should have set any class property bits (see \fI"fsmprops.h"\fR) that 
+are valid (those bits that specify which methods are supported by
+the class will be automatically set by \fIFSMTestClass\fR).
+.PP
+FSM classes are of two general types: 
+\fIprimitive\fR and \fIderived\fR. Primitive classes are used for
+different internal formats of FSMs, e.g.,
+.I FSMBasicClass.
+Derived classes are used for delayed computations on
+other FSMs, e.g., the output of delayed composition or caching. The
+appropriate place to call 
+.I FSMCreateObject 
+depends on this distinction.
+Derived
+FSMs typically have the call to 
+.I FSMCreateObject 
+in the operation that sets up the delayed computation, e.g.,
+.I FSMCompose
+or 
+.I FSMCache.
+Primitive FSMs typically have the call to
+.I FSMCreateObject 
+in the
+.I copy 
+method (assuming it is supported).
+.I FSMCreate, 
+.I FSMCopy, 
+and
+.I FSMConvert
+can then be used to construct particular instances of this FSM class, since
+each is implemented using the copy method.
+.PP
+An
+.I FSMArcsIter
+consists of pointers to the beginning, current, and end of an internal
+arcs buffer, 
+a void pointer to
+.I data,
+which represents any additional state associated with that
+arcs iterator, and the
+.I clas 
+of the FSMArcsIter,
+which is a pointer to an
+.I fsm_arc class_rec
+structure that consists of pointers to functions that are called when 
+the FSMArcsiter is accessed or mutated (see \fIfsmaccess(3)\fR).  For 
+example,
+.I FSMNextArc
+is defined in \fI"fsmaccess.h"\fR as:
+.PP
+.RS
+\f(CW#define FSMNextArc(iter) ((iter)->arcs < (iter)->arcsmax ? 
+.br
+.RS
+\f(CW(iter)->arcs++ : (iter)->clas->nextarcs(iter))\fR
+.RE
+.RE
+.PP
+In other words,
+.I FSMNextArc
+first checks if pointer
+.I arcs
+is less than
+.I arcsmax.
+If so, it returns the next arc from the arc buffer and
+increments
+.I arcs.
+If not, it calls the function
+.I nextarcs,
+which returns the next arc and, possibly, refreshes
+.I arcsmin,
+.I arcs,
+and
+.I arcsmax.
+Thus, this scheme (analogous to a standard I/O file pointer)
+can be used to avoid a function call every time the next arc is fetched.
+.SS SEMIRING REPRESENTATION
+Most users may simply wish to use the semirings described in
+\fIfsmcost(3)\fR. In some cases, users may want to define 
+a new semiring.
+The internal representation of a semiring is also object-oriented.
+There are data components that represent the identity elements and
+function pointer components that give the implementation of the semiring operations.
+The
+.I name
+component should is set to a null-terminated string that describes
+the semiring. The
+.I id
+component should be set to 
+.I SMR_NO_ID
+unless there is a file format ID reserved for this semiring
+(see \fI"fsmprops.h"\fR).
+The
+.I props
+component, which is inspected by \fISMRTest (fsmcost(3))\fR,
+should have set any semiring property bits (see \fI"fsmprops.h"\fR) that 
+are valid (those bits that specify which semiring operations are supported by
+the semiring will be automatically set by \fISMRTest\fR).
+The void pointer
+.I data
+represents any internal data for the semiring.
+.SH BUGS
+The definitions of the
+.I Smr,
+.I FSMArcsClass, 
+.I FSMArcsIter,
+.I FSMClass
+and
+.I Fsm
+types given above are bogus due to mutual recursion between typedefs.
+The correct, but less clear, definitions are left as an exercise for the 
+reader (or see \fI"fsm.h"\fR).
+.SH 
+SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I dst(3)
+Data structures library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/include/dst-4
+Distribution data structures include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution FSM library.
+.TP 3.5i
+.I /n/lvr/linux/lib/libdst-4.a
+Distribution data structures library.
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

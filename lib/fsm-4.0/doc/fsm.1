@@ -1,0 +1,731 @@
+.TH FSM 1 "" "Version 4.0"
+
+.SH NAMES
+
+fsmcompile, fsmprint, fsmdraw, fsmunion, fsmconcat, fsmclosure, fsmreverse, fsminvert, 
+fsmproject, fsmintersect, fsmcompose, fsmdifference,
+fsmconnect, fsmdeterminize, fsmpush, fsmminimize, fsmencode,
+fsmquantize, fsmequiv, 
+fsmrmepsilon, fsmsynchronize, fsmepsnormalize, 
+fsmbestpath, fsmprune, fsmconvert, fsmarcsort, 
+fsmtopsort, fsminfo - finite-state machine utilities
+.PP
+.SH SYNOPSIS
+
+.B fsmcompile 
+[ -i
+.I symbols
+] 
+[ -o
+.I symbols
+] 
+[ -S
+.I symbols
+] 
+[ -t ] 
+[ -f \fIfsmclass\fR ]
+[ -s \fIsemiring\fR ]
+[
+.I file 
+]
+.PP
+.B fsmprint
+[ -i
+.I symbols
+] 
+[ -o
+.I symbols
+] 
+[ -s
+.I symbols
+] 
+[ -l ]
+[
+.I fsm
+]
+.PP
+.B fsmdraw
+[ -i 
+.I symbols
+] 
+[ -o
+.I symbols
+] 
+[ -s
+.I symbols
+] 
+[ -w
+.I x
+]
+[ -h
+.I y 
+]
+[ -f
+.I font
+]
+[ -F
+.I n
+]
+[ -lpv ]
+[
+.I fsm
+]
+.PP
+.B fsmunion 
+[ \fIfsm1\fR ... ]
+.PP
+.B fsmconcat
+[ \fIfsm1\fR ... ]
+.PP
+.B fsmclosure
+[ -p ]
+[
+.I fsm
+]
+.PP
+.B fsmreverse
+[
+.I fsm
+]
+.PP
+.B fsminvert
+[
+.I fsm
+]
+.PP
+.B fsmproject
+[ -io12 ]
+[
+.I fsm
+]
+.PP
+.B fsmintersect 
+[ -c \fIcthresh\fR ] 
+[ -n \fInthresh\fR ] 
+[ -1d ]
+.I fsm1 fsm2
+[ \fI fsm3 \fR ...]
+.PP
+.B fsmcompose
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ -1d ]
+.I fsm1 fsm2
+[ \fI fsm3 \fR ...]
+.PP
+.B fsmdifference
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ -1d ]
+.I fsm1 fsm2
+.PP
+.B fsmconnect
+[ -t ]
+[
+.I fsm
+]
+.PP
+.B fsmdeterminize
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[
+.I fsm
+]
+.PP
+.B fsmpush
+[ -clifrIkd ]
+[
+.I fsm
+]
+.PP
+.B fsmminimize
+[
+.I fsm
+]
+.PP 
+.B fsmencode
+[ -cld ]
+.I fsm key
+.PP
+.B fsmquantize
+[
+.I fsm
+]
+.PP
+.B fsmequiv
+[ -v ]
+.I fsm1 fsm2
+.PP
+.B fsmrmepsilon
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ -1d ]
+[
+.I fsm
+]
+.PP
+.B fsmsynchronize
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ -d ]
+[
+.I fsm
+]
+.PP
+.B fsmepsnormalize
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ -io12d ]
+[
+.I fsm
+]
+.PP
+.B fsmbestpath 
+[ -n \fInbest\fR ]
+[ -c \fIcthresh\fR ]
+[ -N \fInthresh\fR ]
+[ -u ]
+[ \fI fsm \fR ]
+.PP
+.B fsmprune
+[ -c \fIcthresh\fR ]
+[ -n \fInthresh\fR ]
+[ \fI fsm \fR ]
+.PP
+.B fsmconvert
+[ -f \fIfsmclass\fR ]
+[ -s \fIsemiring\fR ]
+[
+.I fsm
+]
+.PP
+.B fsmarcsort
+[ -ioc ]
+[
+.I fsm
+]
+.PP
+.B fsmtopsort
+[ -tie ]
+[
+.I fsm
+]
+.PP
+.B fsminfo
+[ -nptcvP -q \fIwidth\fR -b \fIquantile1\fR -e \fIquantile2\fR ]
+[
+.I fsm
+]
+.SH DESCRIPTION
+These commands construct, display, combine,
+minimize and search
+.I weighted finite-state machines (FSMs).
+Two types of machines are supported,
+.I acceptors
+and
+.I transducers. See
+.I fsmaccess(3)
+for definitions of the components of an FSM: state, start state, arc
+(transition), input symbol, output symbol, arc cost, final cost and
+final state.
+.PP
+Except as described for the commands that compile, print and display
+FSMs, all the commands take as input one or more binary-encoded FSMs
+and send to standard output one binary-encoded FSM. For commands
+that take one input FSM, the FSM can be given as standard input or on
+a file specified as a command-line argument. For commands that take
+more than one FSM, all inputs are specified by command-line
+arguments. A command-line argument of ``-'' specifies
+that the corresponding FSM will be provided on standard input.
+A command-line argument of \fI-?\fR will print usage information.
+.SS FSM COMPILATION AND DISPLAY
+.I fsmcompile
+takes input representing an FSM from file
+.I file
+or standard input,
+and sends to standard output its binary encoding.
+The input should be the textual representation of
+an FSM (see \fIfsm(5)\fR).
+FSM states, input symbols and output symbols are represented in the
+input by non-negative numbers, unless 
+the options
+.I -S symbols,
+.I -i symbols,
+.I -o symbols
+are used. These options allow 
+state, input symbols and output symbols, respectively, 
+to be given textual names, where
+.I symbols 
+files give the translation from those names and numbers (see \fI fsm(5)\fR).
+The input
+should be an acceptor, unless the 
+.I -t 
+option is given, in which case it should be a transducer. 
+The \fI-f\fR option
+specifies the FSM representation class (see \fIfsmclass(3)\fR);
+by default, it is
+.I FSMBasicClass.
+The \fI-s\fR option
+specifies the cost semiring (see \fIfsmcost(3)\fR);
+by default, it is
+.I SMRTropical.
+Note
+.I fsmcompile
+will internally renumber the states from \fI0\fR to the number of states
+minus \fI1\fR.
+.PP
+.I fsmprint
+prints the input FSM
+on standard output using same textual format as 
+.I fsmcompile 
+accepts as input
+(see \fI fsm(5)\fR). States, input symbols and 
+output symbols are printed in numeric form, unless the
+options
+.I -s symbols,
+.I -i symbols,
+.I -o symbols
+are used to provide textual names for states, input symbols and output
+symbols, respectively (see \fI fsm(5)\fR). 
+Note that the states may be renumbered by \fI fsmcompile \fR or 
+other operations.
+With the \fI-l\fR option,
+additional information is output that when read by
+.I fsmcompile
+preserves the state potentials, the FSM representation class, 
+the cost semiring, and
+whether it is an acceptor or transducer.
+.PP
+.I fsmdraw
+sends to standard output a
+.I dot(1)
+graph representation of the input FSM
+(The command \f(CWdot -Tps\fR can be
+used to convert from dot format to PostScript.)
+States, input symbols and output symbols are displayed in numeric
+form, unless the options
+.I -s symbols,
+.I -i symbols,
+.I -o symbols
+are used to provide textual names for states, input symbols and output symbols,
+respectively (see \fI fsm(5)\fR). The options 
+.I -w x
+and
+.I -h x
+set the page width and height (in inches),
+.I -f fontname
+sets the font name (default is Times-Roman),
+.I -F n
+sets the font size (in points),
+.I -p 
+use portrait mode (default is landscape), and
+.I -v 
+displays vertically (i.e., top-to-bottom; default is left-to-right).
+Note that the states may have been renumbered by \fI fsmcompile \fR or 
+other operations.
+.SS FSM CONSTRUCTION AND COMBINATION
+.I fsmunion
+returns the union of one or more input FSMs.
+.PP
+.I fsmconcat
+returns the concatenation of one or more
+input FSMs, in the order specified by the command-line arguments.
+.PP
+.I fsmclosure
+returns the Kleene closure of the input FSM.
+With the
+.I -p 
+option, the empty string is not added, that is, Kleene ``+'' is
+used instead of Kleene ``*''.
+.PP
+.I fsmreverse
+reverses the input FSM, that is,
+the input FSM accepts string 
+.I a1 ... aN 
+with a certain cost iff 
+the output FSM accepts 
+.I aN ... a1 
+with the same cost (and similarly for transducers).
+.PP
+.I fsminvert
+inverts a transducer, that is, the input FSM
+transduces string 
+.I s1 
+to 
+.I s2 
+iff the output machine
+transduces string 
+.I s2 
+to 
+.I s1
+with the same cost.
+It does so by tranposing the input and
+output symbols on each transition.
+.PP
+.I fsmproject
+converts a transducer into an acceptor by retaining only the
+input (with \fI-i\fR or \fI-1\fR) or output (with \fI-o\fR or \fI-2\fR) 
+label on each transition.
+.PP
+.I fsmintersect
+returns the intersection of two or more acceptors.
+Each input FSM accepts string 
+.I s
+iff the output FSM accepts
+.I s
+with the costs combined by the \fISMRTimes\fR operation (see \fIfsmcost(3)\fR).
+.PP 
+.I fsmcompose
+returns the relational composition of the input FSMs, in the order
+given in the command line. With two input FSMs, for example, if
+the first machine transduces string
+.I s1
+to
+.I s2
+and the second machine transduces 
+.I s2 
+to 
+.I s3,
+then the output machine will transduce
+.I s1
+to 
+.I s3
+with the two costs combined by the \fISMRTimes\fR operation (see \fIfsmcost(3)\fR).
+If an input machine is an acceptor, it is treated
+as a transducer from the language it accepts to itself.
+.PP
+.I fsmdifference 
+returns the intersection of the acceptor
+.I fsm1 
+with the complement of the costless, deterministic, epsilon-free acceptor
+.I fsm2. 
+.SS FSM MINIMIZATION AND EQUIVALENCE
+Two acceptors are equivalent if they accept the same strings with the
+same costs; two transducers are equivalent if they transduce the
+same input strings to the same output strings with the same costs.
+.PP
+.I fsmconnect
+returns an equivalent FSM from which
+any states and arcs in the input
+that do not lie on a path from the start state to a final state
+have been removed. With the 
+.I -t
+option, it returns exit status 1 if the output has no states, which
+is useful for testing the input for emptiness.
+.PP 
+.I fsmdeterminize
+returns a deterministic FSM that is equivalent 
+to the input, which must be determinizable.
+Epsilon arcs are treated the same as other symbols.
+.PP 
+.I fsmpush
+returns a 
+.I pushed 
+FSM equivalent to the input. With the \fI-c\fR option, the topology of the input
+FSM is unchanged and the \fISMRPlus\fR-sum of the costs of the
+outgoing arcs (with \fI-i\fR) or incoming arcs (with \fI-f\fR) at each
+state equals \fISMROne\fR. By default, the \fIresidual cost\fR (the
+\fISMRPlus\fR-sum of costs of all complete paths) is
+placed final -- the original final costs are \fISMRTimes\fR-multiplied
+by this residual cost. With \fI-I\fR, the residual cost is instead placed
+initial -- the cost of each arc leaving the initial state is
+\fISMRTimes\fR-multiplied by this cost. With the \fI-r\fR option, the
+residual cost is removed.
+.br
+With the \fI-l\fR option, output labels are
+.I pushed 
+as much as possible towards the initial state (with \fI-i\fR) or the
+final states (with \fI-f\fR).  In particular, with \fI-i\fR, the
+longest common prefix of the output labels of outgoing paths at
+non-initial states with out-degree more than one is epsilon. With
+\fI-f\fR, this property holds with the reverse of the FSM. With
+\fI-k\fR, output labels are pushed as much as possible without
+changing the topology of the input FSM.
+.PP 
+.I fsmminimize
+returns the minimal deterministic FSM equivalent to the input FSM,
+which must be a deterministic acceptor. Epsilon arcs are treated the same as 
+other symbols.
+.PP
+.I fsmencode
+with the \fI-l\fR option represents a transducer as an
+acceptor over the alphabet of pairs of input labels and output labels
+by encoding each distinct input label and output label pair of an arc 
+as a new label in the output FSM. 
+.I fsmencode
+with the \fI-c\fR option represents a weighted FSM as an unweighted one
+by encoding each input label and cost pair of an arc as a new label in the output FSM. 
+With the \fI-cl\fR options together, weighted transducers can be represented
+as unweighted acceptors.
+In each case, the mapping from each input label and output label and/or cost
+to its encoding is written as an FSM to the \fIkey\fR file. If the \fIkey\fR file
+already exists, 
+.I fsmencode
+will first use the encodings specified in 
+the key fsm for any matching arc labelings.
+.I fsmencode
+with the \fI-d\fR option, decodes an encoded FSM if the same set 
+of \fI-l\fR and
+\fI-c\fR options and key FSM is given as used in its encoding.
+.PP 
+.I fsmquantize
+replaces each cost in an FSM with the nearest element
+in its delta-quantization (see \fIfsmcost(3)\fR). 
+.PP
+.I fsmequiv
+exits with zero status if
+.I fsm1
+and
+.I fsm2
+are equivalent. With the \fI-v\fR option,
+a text message is printed if the machines are not 
+equivalent. The inputs must be deterministic,
+epsilon-free acceptors.
+.SS FSM EPSILON OPERATIONS
+.I fsmrmepsilon
+returns an FSM equivalent to
+the input FSM 
+that is epsilon removed. For an acceptor, this means
+there are no epsilon transitions. For a transducer,
+this means there are no paired input-output epsilon transitions.
+.PP 
+.I fsmsynchronize 
+returns an FSM equivalent to the input FSM in which the input and output
+labels are 
+.I synchronized. 
+For a transducer, this means as any path is traversed, its \fIdelay\fR
+is either zero or increases strictly monotonically -- the delay of a
+path is the difference between the number of non-epsilon labels
+encountered on the output side and those encountered on the input
+side.  The input FSM must have bounded delays, that is the delay of
+any cycle must be zero. All acceptors are already synchronized. The
+worst case time and space complexity of the algorithm is
+.I O(O((|Q| + |E|)(|A|^|d| + |B|^|d|))),
+where
+.I Q
+is the set of states of the input FSM,
+.I E
+its transition set, 
+.I A
+its input alphabet,
+and
+.I B
+its output alphabet and 
+.I |d|
+the maximum delay (in absolute value) of a path of the input FSM.
+.PP 
+.I fsmepsnormalize
+returns an equivalent FSM that is epsilon normalized.
+For an acceptor, this is the same as being epsilon removed 
+(see \fIfsmrmepsilon\fR in \fIfsm(1)\fR). For a transducer, it is 
+epsilon removed and has the following additional property.
+With the \fI-i\fR or \fI-1\fR flag, 
+a transition with an epsilon input label is never followed
+on a path by a transition 
+with an non-epsilon input label.
+With the \fI-o\fR or \fI-2\fR flag, the corresponding
+property is true for the output labels.
+The input FSM must be epsilon-normalizable.
+.SS FSM SEARCH
+.I fsmbestpath 
+returns the lowest-cost path from the start state of the input FSM to
+a final state. The path is 
+encoded as a (single path) FSM. With the .I -n nbest
+option, the 
+.I nbest
+lowest-cost paths are returned. The output is encoded as an FSM that is
+the union of the individual paths in increasing cost order. With the
+.I -c cthresh
+and
+.I -N nthresh
+options,
+the input FSM is pruned as in
+.I fsmprune,
+limiting the nbest search.
+With the
+.I -u
+option, all paths returned will be distinct strings.
+The
+.I fsmbestpath
+operation is not defined for semirings that do not
+have the \fISMR_PATH\fR property (see \fIfsmcost(3)\fR).
+.PP
+.I fsmprune
+returns those states and arcs
+that lie on paths whose total path cost in
+.I fsm
+is within 
+.I cthresh
+of the lowest cost path and at most the
+.I nthresh
+best such states.
+.PP
+.SS MISCELLANEOUS
+.PP
+.I fsmconvert
+converts an FSM into a particular FSM representation class and
+a particular semiring.
+The \fI-f\fR option
+specifies the FSM representation class (see \fIfsmclass(3)\fR);
+by default, it is the same as the input.
+The \fI-s\fR option
+specifies the cost semiring (see \fIfsmcost(3)\fR);
+by default, it is the same as the input.
+Note the costs are not modified when changing semirings, they
+are simply reinterpreted in the new semiring.
+.PP
+.I fsmarcsort
+sorts the arcs of the input FSM according to the option given:
+\fI-i\fR sorts by the arc input label,
+\fI-o\fR sorts by the arc output label, and
+\fI-c\fR sorts by the arc cost. All sort from least to greatest.
+.PP
+.I fsmtopsort
+sorts the input FSM according to the option given:
+\fI-t\fR
+does a full topological sort; 
+\fI-e\fR
+topologically sorts with respect to (i/o) epsilons, and
+\fI-i\fR topologically sorts with respect to the input epsilons.
+In each case, if there is a cycle 
+with respect to the sorting criterion,
+.I fsmtopsort
+returns the input FSM unsorted.
+.PP
+.I fsminfo
+sends to standard output the following information about the input FSM
+-- its FSM representation class, its cost semiring and whether it 
+is an acceptor or
+transducer.  With the \fI-n\fR option, various numeric information is printed,
+including the
+number of states, number of transitions, final states, epsilon transitions,
+strongly-connected components, accessible states, and co-accessible states.
+With the \fI-p\fR option, \fIFSMProps\fR (see
+\fIfsmaccess(3)\fR) is called on the input, which will return 
+pre-computed information about the FSM, such as whether it is cyclic, 
+costless, non-negative, or 
+deterministic. If pre-computed information about a property is not 
+supported by the FSM class, a ``?'' is printed for it. With 
+the \fI-t\fR option, values for 
+all FSM properties are printed (by explicit tests run on the FSM if
+needed). See "fsmprops.h" for the set of defined FSM properties.
+With the \fI-c\fR option, the FSM \fIclass\fR properties are
+printed, which include the FSM operations supported by that class.
+See "fsmprops.h" for the set of defined FSM class properties.
+With the \fI-q w\fR option,
+quantiles in intervals of width \fIw\fR are printed for 
+various data
+including state in-degree, state out-degree, input label, output label, and
+arc cost. With the \fI-b q1\fR'' option, the quantiles begin
+at \fIq1\fR (default: 0.0), and with the \fI-e q2\fR'' option, 
+the quantiles end at \fRp2\fR (default: 1.0). 
+The \fI-v\fR option is equivalent to \fI-tcn -q4\fR.
+With the \fI-P\fR flag, information is sent instead to standard error
+and a copy of the input is sent to standard output.
+.SH CAVEATS
+To allow limiting the size of their results,
+.I fsmintersect,
+.I fsmdifference,
+.I fsmcompose
+.I fsmrmepsilon,
+.I fsmsynchronize
+.I fsmepsnormalize
+and
+.I fsmdeterminize
+each accept the \fI-c cthresh\fR option and \fI-n nthresh\fR, which call
+\fIFSMPrune\fR (see \fIfsm(3)\fR) prior 
+to output. For 
+.I fsmrmepsilon,
+.I fsmintersect,
+.I fsmdifference,
+and
+.I fsmcompose,
+if the \fI-c\fR or \fI-n\fR option is not given, then 
+\fIFSMConnect\fR (see \fIfsm(3)\fR) 
+is instead called on the output to remove any states that are not on a path
+from the start state to a final state. However, if the \fI-d\fR option 
+is given, \fIFSMConnect\fR will not be called. In any case, memory size
+is, by default, kept to a mininum by using a two-pass expansion strategy. 
+With the '-1' option, only one expansion pass is used, which can halve
+the execution time in certain circumstances, but increase memory usage.
+.PP
+For best performance,
+.I fsmintersect,
+.I fsmdifference,
+and
+.I fsmcompose
+should have indexed FSM classes as input or internal conversions
+must be done. See \fIfsmclass(3)\fR for more information.
+.PP
+.I fsmsynchronize,
+.I fsmepsnormalize,
+and
+.I fsmdeterminize
+may not terminate if there is no equivalent FSM that admits the desired
+property. 
+.I fsmsynchronize,
+.I fsmepsnormalize,
+and
+.I fsmdeterminize
+are otherwise worst-case exponential in time and space.
+However, many practical cases are well-behaved.
+.PP
+Over non-idempotent semirings (see \fIfsmcost(3)\fR),
+.I fsmrmepsilon,
+.I fsmpush,
+and
+.I fsmprune
+may not terminate if there is no equivalent FSM that admits the desired
+property.
+.PP
+Some commands take additional options not specified here. The \fI-?\fR
+option describes the complete set of options available for each command.
+.SH BUGS
+On non-POSIX compliant systems, binary data directed to standard 
+output may become corrupted. A command-line argument of \fI-F\fR 
+can instead be used to redirect the output FSM to a specified file.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM C accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

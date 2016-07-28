@@ -1,0 +1,545 @@
+.TH FSMACCESS 3 "" "Version 4.0"
+
+.SH NAMES
+FSMCreate, FSMNumStates, 
+FSMStatesOpen, FSMNextState, FSMStatesClose,
+FSMAddStates, FSMDeleteStates, FSMStart, 
+FSMSetStart, FSMType, FSMSetType, FSMSemiring, FSMSetSemiring,
+FSMFinal, FSMSetFinal, FSMPotential,
+FSMSetPotential, FSMNumArcs, FSMNumInputEps, FSMNumOutputEps, FSMArcs, 
+FSMArcsOpen, FSMNextArc, FSMArcsClose, FSMArcsReset, FSMSeekPos, 
+FSMSeekEps, FSMSeekNonEps,
+FSMSeekLabel, FSMSetArcs, FSMAddArcs, FSMProps, FSMSetProps, FSMFree - 
+finite-state machine C constructors, accessors, and mutators.
+.PP
+.SH SYNOPSIS
+.B #include """fsm.h"""
+.PP
+\fBtypedef enum { FSMAccep, FSMTrans } FSMTypes;
+.PP 
+\fBFSMCreate(FSMTypes type, FSMClass clas, Smr smr)
+.PP
+\fBint FSMNumStates(Fsm fsm)
+.PP
+\fBFSMStatesIter FSMStatesOpen(Fsm fsm)
+.PP
+\fBint FSMNextState(FSMStatesIter *iter)
+.PP
+\fBvoid FSMStatesClose(FSMStatesIter *iter)
+.PP
+\fBint FSMAddStates(Fsm fsm, int n)
+.PP
+\fBvoid FSMDeleteStates(Fsm fsm, int *states, int n)
+.PP
+\fBint FSMStart(Fsm fsm)
+.PP
+\fBvoid FSMSetStart(Fsm fsm, int state)
+.PP
+\fBFSMTypes FSMType(Fsm fsm)
+.PP
+\fBvoid FSMSetType(Fsm fsm, FSMTypes type)
+.PP
+\fBSmr FSMSemiring(Fsm fsm)
+.PP
+\fBvoid FSMSetSemiring(Fsm fsm, Smr smr)
+.PP
+\fBCost FSMFinal(Fsm fsm, int state)
+.PP
+\fBvoid FSMSetFinal(Fsm fsm, int state, Cost cost)
+.PP
+\fBCost FSMPotential(Fsm fsm, int state)
+.PP
+\fBvoid FSMSetPotential(Fsm fsm, int state, Cost pntl)
+.PP
+.B typedef struct { 
+.RS .5i
+.B int ilabel;
+.br
+.B int olabel;
+.br
+.B Cost cost;
+.br
+.B int nextstate;
+.br
+.RE
+.B } FSMArc;
+.PP
+.B FSMArc FSMNoArc = {
+.RS .5i
+\fBFSMNoLabel, FSMNoLabel, SMRDefaultCost, FSMNoState
+.RE
+.br
+};
+.PP 
+\fBint FSMNumArcs(Fsm fsm, int state)
+.PP
+\fBint FSMNumInputEps(Fsm fsm, int state)
+.PP
+\fBint FSMNumOutputEps(Fsm fsm, int state)
+.PP
+\fBint FSMArcs(Fsm fsm, int state, FSMArc **arcs)
+.PP
+\fBFSMArcsIter FSMArcsOpen(Fsm fsm, int state)
+.PP
+\fBFSMArc *FSMNextArc(FSMArcsIter *iter)
+.PP
+\fBvoid FSMArcsClose(FSMArcsIter *iter)
+.PP
+\fBvoid FSMArcsReset(FSMArcsIter *iter)
+.PP
+\fBvoid FSMSeekPos(FSMArcsIter *iter, int n)
+.PP
+\fBint FSMSeekEps(FSMArcsIter *iter)
+.PP
+\fBint FSMSeekNonEps(FSMArcsIter *iter)
+.PP
+\fBint FSMSeekLabel(FSMArcsIter *iter, int label)
+.PP
+\fBvoid FSMSetArcs(Fsm fsm, int state, FSMArc *arcs, int n)
+.PP
+\fBvoid FSMAddArcs(Fsm fsm, int state, FSMArc *arc, int n)
+.PP
+\fBunsigned FSMProps(Fsm fsm, unsigned *specprops)
+.PP
+\fBvoid FSMSetProps(Fsm fsm, unsigned haveprops, unsigned setprops)
+.PP
+\fBvoid FSMFree(Fsm fsm)
+.SH DESCRIPTION
+These functions create, access and mutate
+C
+.I Fsm
+objects (FSMs), representing
+.I weighted finite-state transducers
+and
+.I acceptors.
+.PP
+An FSM
+.I fsm
+contains a set of states, numbered consecutively from 0 to the
+FSM's number of states minus 1, with a distinguished
+.I start state.
+Each state has a
+.I final cost
+associated with accepting
+at that state. A
+.I final state
+(one that can accept a string)
+has a final cost not equal to
+.I SMRZero
+(see 
+.I fsmcost(3)
+). Each state also has
+a number of
+.I arcs
+(transitions) to other states, specified by structures
+of type
+.I FSMArc.
+Each arc
+.I a
+has an
+.I input symbol a.ilabel,
+an 
+.I output symbol a.olabel,
+a
+.I cost a.cost
+and the number
+.I a.nextstate of the arc's destination.
+Input and output symbols are represented by
+non-negative integers, with 0 reserved for the empty string
+(epsilon). For an acceptor, the input and output symbols of each
+transition are identical.
+Each FSM is of a given 
+.I FSMClass.
+The class specifies the internal representation of the FSM.
+You can use class 
+.I FSMBasicClass
+for general-purpose FSMs. See \fIfsmclass(3)\fR for more information
+on available FSM classes and \fIfsmobject(3)\fR on how to create 
+your own classes.
+.PP
+Each FSM operation described below is marked (in parentheses) as
+either
+.I required
+or
+.I optional. 
+A required operation must be supported by all classes of FSMs; 
+an optional operation may be supported by only some classes of FSMs. 
+In general, an optional operation is supported by a class only if 
+it can be performed relatively efficiently. See \fIfsmclass(3)\fR on
+how to test if an operation is supported by a class. 
+.PP
+.I FSMCreate
+creates a new 
+.I Fsm 
+of type 
+.I type,
+of class
+.I class,
+and of semiring
+.I smr
+with no states. This, by convention, represents the empty 
+language/transduction. (Optional)
+.PP
+.I FSMNumStates
+returns the number of states in 
+.I fsm. 
+States are in the range \fI0\fR
+to \fIFSMNumStates(fsm) - 1\fR. (Optional)
+.PP 
+.I FSMStatesOpen
+returns a
+.I FSMStatesIter, 
+which is an object that supports the following two operations.
+.I FSMNextState,
+when successively called with
+the address of the states
+.I iter,
+returns each of the states in the FSM in ascending numeric order.
+After the states have been exhausted,
+.I FSMNextState 
+returns
+.I FSMNoState.
+.I FSMStatesClose
+frees any storage associated with the states
+.I iter,
+destroying it. The 
+.I FSMStatesIter
+is valid until a mutating operation is performed on the FSM.
+Multiple state iterators may be opened simultaneosly on an FSM.
+The purpose of
+.I FSMStatesOpen
+is to allow iterating over the states of
+an FSM regardless of whether the number of states is explicitly 
+known at the outset (e.g., over the output of a delayed composition).
+(\fBRequired\fR)
+.PP
+.I FSMAddStates
+adds 
+.I n
+new states to
+.I fsm. 
+These states have no arcs, are non-final and have potential \fISMROne\fR (see 
+\fIFSMPotential\fR). It returns the number
+.I m
+of the first state added. The new states have numbers
+.I m, ..., m+n-1.
+(Optional)
+.PP
+.I FSMDeleteStates
+deletes from
+.I fsm
+the
+.I n
+states specified by the elements of
+.I states
+and all arcs entering and exiting these states. (Optional)
+.PP
+.I FSMStart
+returns the initial state of
+.I fsm. 
+If the 
+fsm has no states, 
+.I FSMNoState
+is returned. 
+The first state created by
+.I FSMAddStates,
+by default, is the initial state of the fsm (i.e., state \fI0\fR). (\fBRequired\fR)
+.PP
+.I FSMSetStart
+changes the initial state of 
+.I fsm
+to
+.I state. 
+(Optional)
+.PP 
+.I FSMType
+returns
+the
+.I type
+of
+.I fsm. 
+(\fBRequired\fR)
+.PP
+.I FSMSetType
+changes the type of 
+.I fsm
+to
+.I type. 
+(Optional)
+.PP 
+.I FSMSemiring
+returns
+the semiring
+.I smr
+of
+.I fsm. 
+(\fBRequired\fR)
+.PP
+.I FSMSetSemiring
+changes the semiring of
+.I fsm
+to
+.I smr
+Note the costs are not modified when changing semirings, they
+are simply reinterpreted in the new semiring.
+(Optional)
+.PP
+.I FSMFinal
+returns the final cost 
+of
+.I state. 
+(\fBRequired\fR)
+.PP
+.I FSMSetFinal
+changes the final cost of
+.I state
+to
+.I cost. 
+(Optional)
+.PP
+.I FSMPotential
+returns the potential associated to that
+.I state.
+The potential is used to store auxilary cost information
+about a state, e.g., in the shortest path algorithms.
+By default, it is \fISMROne\fR (see \fIFSMAddStates\fR). 
+(\fBRequired\fR)
+.PP
+.I FSMSetPotential
+changes the potential of
+.I state
+to
+.I ptnl.
+(Optional)
+.PP
+.I FSMNumArcs
+returns the number of arcs leaving 
+.I state
+(Optional)
+.PP
+.I FSMNumInputEps
+and
+.I FSMNumOutputEps
+return the number of input epsilons and output epsilons leaving 
+.I state,
+respectively. (Optional)
+.PP
+.I FSMArcs
+places a pointer in
+.I arcs
+to an array listing the arcs leaving 
+.I state 
+and returns the number of these arcs.
+Each arc is represented with an FSMArc structure,
+which contains the input and output labels, arc cost, and next state.
+For an acceptor, the input label and output label, by convention,
+have the same value. The returned array is valid until the next call to 
+.I FSMArcs
+or until a mutating operation is performed on the FSM.
+For some classes, the arcs array has longer extent (see \fIfsmclass(3)\fR
+and \fIfsmprops.h\fR).
+The array should not be modified unless
+.I FSMSetArcs 
+is subsequently called on this state. (\fBRequired\fR)
+.PP 
+.I FSMArcsOpen
+returns an
+.I FSMArcsIter
+for state
+.I state
+of the input FSM, 
+which is an object that supports the following operations:
+.RS .5i
+.PP
+.I FSMNextArc,
+when successively called with
+the address of the arcs
+.I iter,
+returns a pointer to each of the arcs leaving state
+.I state
+exactly once. The arc pointed to is valid until the next
+call to
+.I FSMNextArc
+on that state. For some classes, the arc pointer has longer extent 
+(see \fIfsmclass(3)\fR and \fIfsmprops.h\fR).
+The components of the arc should not be modified (use \fIFSMArcs\fR
+AND \fIFSMSetArcs\fR for mutation). After the arcs have been exhausted,
+.I FSMNextArc 
+returns a pointer to 
+.I FSMNoArc.
+.PP
+.I FSMArcsClose
+frees any storage associated with the arcs
+.I iter,
+destroying it.
+.PP
+.I FSMArcsReset
+returns the arcs iterator to its position when first opened.
+.RE
+.PP
+The following operations may also be supported by an
+.I FSMArcsIter,
+depending on (and determinable from) the FSM class (see \fIfsmclass(3)\fR):
+.PP
+.RS .5i
+.I FSMSeekPos
+repositions the
+.I iter
+to point at the \fIn\fRth
+arc from the beginning.
+.PP
+.I FSMSeekEps
+and
+.I FSMSeekNonEps
+reposition the
+.I iter
+to point at the first epsilon and non-epsilon arc leaving this state,
+respectively. For an FSM that supports this operation, 
+the epsilon arcs are grouped together and the non-epsilon arcs are
+grouped together. For transducers, whether the seeks are with respect
+to the input labels or the output labels depends on 
+(and can be determined from) the FSM class (see \fIfsmclass(3)\fR).
+If a match is found, these operations return 1, otherwise 0. When no match
+is found, where the iterator points is undefined (until successfully 
+repositioned).
+.PP
+.I FSMSeekLabel
+repositions the
+.I iter
+to point at the first arc leaving this state that has label matching
+.I label.  
+For an FSM that supports this operation, arcs with the 
+same label are grouped together.
+For transducers, whether the seeks are with respect
+to the input labels or the output labels 
+depends on (and can be determined from) the FSM class 
+(see \fIfsmclass(3)\fR).
+If a match is found, this operation returns 1, otherwise 0. When no match
+is found, the iterator is left at an unspecified (but valid) position.
+.RE
+.PP
+The 
+.I FSMArcsIter
+is valid until a mutating operation is performed on the FSM. Multiple
+arc iterators may be opened simultaneosly on an FSM.
+(Required)
+.PP
+.I FSMSetArcs
+sets the arcs leaving
+.I state
+to
+.I arcs. 
+(Optional)
+.PP
+.I FSMAddArcs
+adds
+.I n
+new 
+.I arcs
+leaving
+.I state. 
+(Optional)
+.PP
+.I FSMProps
+returns stored information about 
+.I fsm, 
+such as whether it is cyclic, costless, non-negative, or deterministic. 
+For each property there
+is a corresponding bit in the unsigned int returned, and if that bit is
+set, then the property is true for that FSM. See \fI"fsmprops.h"\fR for 
+the set of defined properties. Stored information about a property may or 
+may not be available about the FSM. If it is available, then	
+the corresponding bit in the unsigned int pointed to by the
+.I specprops
+argument will be set, otherwise it is cleared.
+Thus, if a bit is not set in 
+.I haveprops,
+but is set in
+.I specprops,
+the corresponding property is false for that FSM. (Required)
+.PP
+.I FSMSetProps
+sets stored properties for
+.I fsm.
+If a bit is set in 
+.I haveprops,
+then the corresponding property (see \fI"fsmprops.h"\fR)
+is true for that FSM.
+A set bit in 
+.I setprops
+indicates that the information of whether the
+corresponding property is true or false
+is to be added/updated to that FSM. Thus, if a bit is not set in 
+.I haveprops,
+but is set in
+.I setprops,
+the corresponding property is false for that FSM. (Optional)
+.PP
+.I FSMFree
+frees all storage associated
+with
+.I fsm,
+destroying it. (\fBRequired\fR)
+.SH CAVEATS
+Note many of these operations are implemented as macros, so arguments may
+be evaulated more than once.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I dst(3)
+Data structures library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/include/dst-4
+Distribution data structures include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution fsm library.
+.TP 3.5i
+.I /n/lvr/linux/lib/libdst-4.a
+Distribution data structures library.
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

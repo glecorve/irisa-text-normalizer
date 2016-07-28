@@ -1,0 +1,192 @@
+This file primarily lists incompatible CHANGES to documented features
+and BUG fixes. For fuller information on ADDITIONS, see the most recent 
+man pages.
+
+========================================================================
+VERSION 4.0 -- April 28, 2003
+
+CHANGES:
+
+(1) Multiple semirings for costs provided in same compilation:
+    (a) FSMCreate and FSMConvert now take semiring arguments. FSM
+        class must be specified by name to 'fsmconvert'.
+    (b) Identifiers for the semiring elements and operations have been
+	renamed and made semiring dependent (e.g. WORSTCOST becomes 
+	SMRZero(smr) and EXTEND(x,y) becomes SMRTimes(smr, x, y), 
+	where smr is the semiring). The old names are backward
+	compatible and are interpreted in the tropical semiring 
+	(see include/fsmcompat.h).
+    (c) the "-s state_syms" flag to 'fsmcompile' has been moved to -S
+
+(2) fsmcompact has been deleted (use fsmencode, fsmdeterminize and
+        fsmminimize)
+
+(3) fsmarccollect has been deleted
+
+(4) FSMArcSort now takes an additional `data' argument.
+
+(5) Quantization has changed:
+    (a) NTOCOST, COSTTON, NCOSTS have been removed
+    (b) FSMQuantize now takes an additional 'delta' argument.
+    (c) FSMPackedClass has been removed
+
+BUG FIXES:
+
+(1) Fixed bug in FSMEquiv that ignored weights in the test of
+equivalence.
+
+(2) Fixed bug in fsmcompose, the result of composition was FSMPruned
+in all cases, so in particular it was returning an error in the case
+of machines with a negative cycle.
+
+ADDITIONS: 
+
+Single-source shortest distance algorithm generalized to work with
+k-closed semirings and additional features such as arc filters,
+generalization of queue disciplines with introduction of a generic
+topological queue discipline; delayed epsilon-removal, new destructive
+epsilon-removal; delayed encoding/decoding with key machine reusable
+for encoding other automata; additional options for utilities such as
+the use of the choice of the semiring approximation weight delta; new
+option for reweighting (weight at final states, or initial state, or
+taken off); string pushing algorithm; minimum string pushing algorithm
+(no change to the topology); change and improvement of transducer
+determinization; change and generalization of fsmpush interface;
+equivalence of (weighted) transducers; epsilon-normalization
+algorithm, synchronization algorithm. Multiple semirings.
+FSM-dependent allocators/error-handling.
+
+========================================================================
+VERSION 3.7 -- Sep 11, 1998
+
+CHANGES:
+
+(1) FSMPrune and FSMBestpaths now takes an additional nthresh arg.
+
+BUG FIXES:
+
+ADDITIONS: 
+
+Made the mutable FSM classes portable across standard byte-swap orders.
+Made minus infinity a member in good standing of the default semiring.
+
+========================================================================
+VERSION 3.6 -- Jan 17, 1998
+
+CHANGES:
+
+(1) FSMPrune now takes an additional FSMModes argument.
+
+BUG FIXES:
+
+(1a) Fixed bug in FSMBestpath that could give a wrong answer if input
+was a cyclic automaton with non-negative weights.
+
+(1b) Fixed bug in FSMBestPaths that could give wrong answers
+
+(2) DSTFifoCreate had wrong size param (and broke w/ 64-bit)
+
+ADDITIONS:
+
+Determinization of (weighted) transducers; interchangeable composition
+epsilon filters; prune class; multi-thread support
+
+========================================================================
+VERSION 3.5 -- May 7, 1997
+
+CHANGES:
+
+(1) Hindle's backoff class moved into a dyanmic shared object (see below).
+
+ADDITIONS:
+
+Dynamic-loading of shared FSM objects. 
+
+========================================================================
+VERSION 3.4 -- Nov 25, 1996
+
+CHANGES:
+
+(1) FSMDeterminize, FSMCompact now treat epsilons as any other symbol
+
+(2) FSMProps now a required operation.
+
+(3) FSMSetProps added to the FSMClass methods.
+
+(4) FSM(Set)StateLabel replaced by FSM(Set)Potential. In effect, this 
+    changes state auxilary info from a label (int) to a Cost (float).
+
+ADDITIONS:
+
+Weighted, delayed determinization; weighted minimization; weighted equivalence;
+bestpath for acyclic and neg cost FSMs; (weighted) cyclic 
+eps. removal; Don Hindle's backoff FSM class; n-bestpaths.
+
+========================================================================
+VERSION 3.3 -- Apr 8, 1996
+
+CHANGES:
+
+(1) FSMDestruct mode now modifies (and frees) only the FIRST fsm argument.
+
+(2) FSMArcsOpen now a required operation.
+
+ADDITIONS: 
+
+Delayed algorithms for union, concat, closure, project, invert, arcsort.
+
+========================================================================
+VERSION 3.2 -- Jan 3, 1996
+
+CHANGES:
+
+(1) state and arc iterators renamed and changed. fsm object changed
+wrt these iterators.
+
+(2) FSMSetType made an optional fsm object method.
+
+ADDITIONS:
+
+epsilon and grouped classes; improved composition w/ epsilons; fsminfo
+provides quantile info
+
+========================================================================
+VERSION 3.1 -- Aug 12, 1995
+
+CHANGES:
+
+(1) 'fsminfo' now, by default, prints minimal info. 'fsminfo -v'
+gives a superset of the poop it used to. See 'fsminfo -?' for more
+options. 
+
+(2) low-level changes to fsmobject -- added props method and cprop flags.
+
+========================================================================
+VERSION 3.0 -- Jun 30, 1995
+
+CHANGES FROM FSM-2:
+
+(1) FSM's are now divided into different 'classes' corresponding to
+    different possible formats. Not every FSM class supports all the 
+    fsm accessors; only a 'core' set of accessors is guaranteed by 
+    all classes (see fsmaccess(3)). However, every lib function in fsm(1) 
+    and fsm(3) will work with any FSM. 'FSMBasicClass' corresponds
+    to the standard format used in fsm-2 (and fsm-3) and supports
+    all the accessors from fsm-2.
+
+(2) FSMCreate(fsm) => FSMCreate(fsm, FSMBasicClass)
+    FSMCopy(fsm)   => FSMCopy(fsm, FSMBasicClass)
+    FSMCache(fsm)  => FSMCache(fsm, FSMBasicClass, INT_MAX)   
+    FSMPrefix      => DSTPrefix
+
+(3) 'FSMDump' no longer automatically removes unreachable states, however
+    now every lib function that might produce them calls 'FSMConnect'
+    internally (when not FSMDelay'ed). This makes the behavior of, say,
+    'FSMCompose' and  'bin/fsmcompose' the same now.
+
+(4) The lib routines now never modify their input in any way
+    unless called with FSMDestruct (e.g., no sorting, trimming, etc).
+
+(5) The efficiency of FSMCompose, FSMIntersect and FSMDifference 
+can vary greatly depending on how they are called. See the 'Caveats'
+in man pages fsm(1) and fsm(3).

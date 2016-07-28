@@ -1,0 +1,181 @@
+###############################################################################
+# This software is being provided to you, the LICENSEE, by the Massachusetts  #
+# Institute of Technology (M.I.T.) under the following license.  By           #
+# obtaining, using and/or copying this software, you agree that you have      #
+# read, understood, and will comply with these terms and conditions:          #
+#                                                                             #
+# Permission to use, copy, modify and distribute, including the right to      #
+# grant others the right to distribute at any tier, this software and its     #
+# documentation for any purpose and without fee or royalty is hereby granted, #
+# provided that you agree to comply with the following copyright notice and   #
+# statements, including the disclaimer, and that the same appear on ALL       #
+# copies of the software and documentation, including modifications that you  #
+# make for internal use or for distribution:                                  #
+#                                                                             #
+# Copyright 1991-4 by the Massachusetts Institute of Technology.  All rights  #
+# reserved.                                                                   #
+#                                                                             #
+# THIS SOFTWARE IS PROVIDED "AS IS", AND M.I.T. MAKES NO REPRESENTATIONS OR   #
+# WARRANTIES, EXPRESS OR IMPLIED.  By way of example, but not limitation,     #
+# M.I.T. MAKES NO REPRESENTATIONS OR WARRANTIES OF MERCHANTABILITY OR FITNESS #
+# FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE LICENSED SOFTWARE OR      #
+# DOCUMENTATION WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,        #
+# TRADEMARKS OR OTHER RIGHTS.                                                 #
+#                                                                             #
+# The name of the Massachusetts Institute of Technology or M.I.T. may NOT be  #
+# used in advertising or publicity pertaining to distribution of the          #
+# software.  Title to copyright in this software and any associated           #
+# documentation shall at all times remain with M.I.T., and USER agrees to     #
+# preserve same.                                                              #
+###############################################################################
+
+# abbreviation list
+# derived from unigram file 29 Aug 91 mods to 17 Sept 91
+# x.y. mapped to x. y. in program
+
+# true abbreviations (must end with .)
+# if key includes lower case, an upper case version will be created
+[Aa]bbrv?\. => abbreviation
+[Aa]dm\. => Admiral
+Ala\. => Alabama
+Alex\. => Alexander
+[Aa]pr\. => April
+Ariz\. => Arizona
+Ark\. => Arkansas
+[Aa][Uu][Gg]\.? => August
+[Aa]ve?\. => Avenue
+Bancorp\. => Bancorp
+Bhd\. => B.H.D.
+[Bb]lvd\. => Boulevard
+[Bb]rig\. => Brigadeer
+[Bb]ros\. => Brothers
+Ca\. => California
+Calif\. => California
+[Cc]apt\. => Captain
+[Cc]ie\. => Company
+[Cc]mdr\. => Commander
+[Cc]o\. => Company
+[Cc]ol\. => Colonel
+Colo\. => Colorado
+Conn\. => Connecticut
+[Cc]orp\. => Corporation
+[Cc]os\. => Companies
+[Cc]pl\. => Corporal
+[Dd][Ee][Cc]\.? => December
+Del\. => Delaware
+Dept\.? => Department
+dept\.? => department
+[Dd]r\.? => Doctor
+[Dd]rs\.? => Doctors
+e\.?g\.? => e.g.
+[Ee]tc\. => et cetera .
+[Ee]tc => et cetera
+[Ff][Ee][Bb][Rr]?\.? => February
+Fla\. => Florida
+Fr\. => Friar
+[Ff]ri\. => Friday
+Ft\. => Fort
+Ga\. => Georgia
+[Gg]en\. => General
+[Gg]ov\. => Governor
+[Gg]ovt\. => government
+i\.?e\.? => i.e.
+Ill\. => Illinois
+[Ii]nc\.? => Incorporated
+incl\.? => including
+Ind\. => Indiana
+InfoCorp\. => InfoCorp
+Infocorp\. => InfoCorp
+Intercorp\. => Intercorp
+[Jj][Aa][Nn]\.? => January
+[Jj]r\.? => Junior
+[Jj][Uu][Ll]\.? => July
+[Jj][Uu][Nn]\.? => June
+Kan\. => Kansas
+Ky\. => Kentucky
+La\. => Louisiana
+[Ll]t\. => Lieutenant
+[Ll]td\.? => Limited
+[Ll]tda\. => Company
+[Mm]aj\. => Major
+[Mm][Aa][Rr]\.? => March
+Mass\. => Massachusetts
+MCorp\. => M. Corporation
+Md\. => Maryland
+Me\. => Maine
+# Some Italian company
+Me\.T\.A\. => M.E.T.A.
+[Mm]fg\. => Manufacturing
+Mich\. => Michigan
+Minn\. => Minnesota
+Miss\. => Mississippi
+Mo\. => Missouri
+Mt\. => Mountain
+Mont\. => Montana
+# >>> meaning of mistress has changed + symmetry
+[Mm]r\.? => Mister
+[Mm]rs\.? => Mrs
+[Mm]s\.? => Ms
+#Mr\. => Mister
+#Mrs\. => Mistress
+#Ms\. => Miz
+#Messrs\.
+#
+Neb\. => Nebraska
+Nev\. => Nevada
+[Nn]um\. => number
+[Nn]ums\. => numbers
+num => number
+nums => numbers
+Nº => number
+No.(?! ?\d+) => no .
+No\. => number
+[Nn][Oo][Vv]\.? => November
+[Oo][Cc][Tt]\.? => October
+[Oo] ?\.? ?[Kk] ?\.? => O.K.
+Okla\. => Oklahoma
+Ont\. => Ontario
+[Oo]p\. => Opus
+Ore\. => Oregon
+p\.(?= \d+) => page
+Pa\. => Pennsylvania
+PacifiCorp\. => PacifiCorp
+Penn\. => Pennsylvania
+PHLCorp\. => P. H. L. Corporation
+Ph\.?D\.? => P.H.D.
+[Pp][Hh][Dd]\.? => P.H.D.
+[Pp]rof\.? => Professor
+[Pp]rop\. => Proposition
+[Pp]te\. => Point
+[Pp]ty\. => Party
+[Pp]vt\. => Private
+[Pp][Pp]\.(?> [0-9]) => pages #watch out space
+[Rr]\.? ?&[Dd] => R&D
+[Rr]d\.? => road
+[Rr]ep\. => Representative
+[Rr]eps\. => Representatives
+[Rr]ev\. => Reverend
+[Ss]en\. => Senator
+Sens\. => Senators
+[Ss][Ee][Pp][Tt]?\.? => September
+[Ss]gt\. => Sargent
+S\.p\.A\. => Company
+[Ss]r\.? => Senior
+#St\. => Street or Saint =>  => Context dependent
+[Ss]t\.?(?= +[A-Z]) => Saint
+[Ss]t\.?(?! +[A-Z]) => Street	
+Ste\. => Saint
+[Tt]el\. => Telephone
+Tenn\. => Tennessee
+Tex\. => Texas
+Va\. => Virginia
+Vt\. => Vermont
+W\.?W\.?.2 => World War 2
+W\.Va\. => West Virginia
+Wash\. => Washington
+Wis\. => Wisconsin
+Wyo\. => Wyoming
+[Yy]r\. => Year
+[Vv][Ss]\.? => versus
+PR => P.R.
+

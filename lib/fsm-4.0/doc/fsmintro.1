@@ -1,0 +1,341 @@
+.TH FSMINTRO 1 "" "Version 4.0"
+
+.SH NAMES
+
+fsm - Introduction to the fsm programs and library
+.SH OVERVIEW
+These FSM tools construct, combine, minimize, and search 
+\fIweighted finite-state machines (FSMs)\fR. They are divided
+into three levels:
+.SS USER PROGRAM LEVEL 
+The FSM user-program level consists of a set of programs that manipulate
+FSMs by reading from and writing to files or pipelines (\fIfsm(1)\fR),
+and the FSM textual file format specification (\fIfsm(5)\fR). For example,
+\fIfsmintersect\fR returns an FSM that accepts the language 
+that is the intersection
+of those accepted by the input FSMs. Understanding this level, by 
+itself, is sufficient for many applications and is a good starting
+point for exploring these tools.
+.SS C LIBRARY LEVEL
+The FSM C library level consists of a library archive of C functions 
+(\fIfsm(3)\fR), which implement the user program level. Typically,
+a program from the user-level (e.g., \fIfsmintersect\fR) is implemented by 
+a call to a corresponding library function (e.g., \fIFSMIntersect\fR), 
+preceded by a library function call 
+to read each input FSM into an internal 
+FSM object (\fIFSMLoad\fR) and followed by the 
+library function call that writes out the resultant FSM (\fIFSMDump\fR).
+In addition, there is a set of FSM accessors and mutators 
+(\fIfsmaccess(3)\fR) that provide the public interface to the FSM object 
+itself. Understanding this level is necessary if you wish to include 
+FSM operations inside your own programs.
+.SS DEFINITION LEVEL
+The FSM definition level consists of three parts. First, there are
+definitions that give the meaning and use of \fIcosts\fR (or
+\fIweights\fR) and their semirings (\fISmr's\fR) in the library (\fIfsmcost(3)\fR).  
+Second, there are definitions that list the kinds of FSM representations (\fIFSMClass'es\fR) 
+that are supported, which offer a choice to meet particular applications. 
+Finally, there are the low-level definitions of an FSM, an FSMClass
+and an Smr, which are object-oriented to allow the user to create their own
+FSM representations and semirings if desired. Understanding this level, which is 
+the most detailed, is necessary if you wish to know the finer points or
+extend the internals of the FSM library.
+.SH FREQUENTLY ASKED QUESTIONS
+New users are encouraged to read fsm(1) and fsm(5) first and
+experiment with some small examples. We list below the answers to
+common questions/problems users have when first using these tools:
+.PP
+(1) What are the final costs for?
+.PP
+The final costs are the weighted generalization of final and non-final
+states. A state's final cost is the cost of exiting the automaton at
+that state (see fsm(5)).  A state is considered final iff its final
+cost is not equal to SMRZero (see fsmcost(3)), otherwise it is
+non-final.
+.PP
+(2) Why is there no operation to see if a string represented as FSA1
+is accepted by an acceptor FSA2?
+.PP
+This is equivalent to seeing if their intersection is non-empty (see
+3).
+.PP
+(3) How can I test if an acceptor/transducer corresponds to the empty
+language/transduction?
+.PP
+This is equivalent to checking if the output of \fIfsmconnect\fR has no
+states.  This can be tested using \f(CWfsmconnect -t\fR, which returns exit
+status 1 if its output has no states.
+.PP
+(4) Why is there no operation for converting an acceptor into the
+corresponding transducer (i.e., the identity transducer restricted to
+the strings in the acceptor)?
+.PP
+It is not needed; the FSM library automatically interprets any
+acceptor argument as the corresponding transducer where appropriate.
+.PP
+(5) Why is there no operation to transduce acceptor FSA by transducer
+FST?
+.PP
+This is equivalent to composing FSA with FST and then projecting on to
+the output side.
+.PP
+(6) I built an acceptor/transducer, but it does not accept/transduce
+anything! Why?
+.PP
+Did you forget to specify the final states?
+.PP
+(7) Why can I build acceptors fine, but my transducers don't compile
+correctly?
+.PP
+Did you forget the ``-t'' flag to \fIfsmcompile\fR, which is needed for
+transducers?
+.PP
+(8) Why can't I print out FSMs with their symbolic labels after
+calling certain operations on them?
+.PP
+Did you include a symbol for label 0, the epsilon label, in your
+symbols file? Certain operations, such as \fIfsmconcat\fR, \fIfsmunion\fR, and
+\fIfsmclosure\fR can add epsilons to machines that may not have previously
+contained them.
+.PP
+(9) Why does my operation (e.g., determinization) never terminate/run
+out of memory?
+.PP
+Not all operations admit all FSM inputs.  For example, not all FSMs
+are determinizable; in such cases, determinization will run until
+resources are exhausted. Sufficient (but not necessary) conditions for
+an FSM to be determinizable are that it is acyclic or, for acceptors,
+that it is costless (see \fIfsmcost(3)\fR). See the
+.I CAVEATS 
+section in \fIfsm(1)\fR and \fIfsm(3)\fR for other algorithms that
+have restrictions on their inputs.
+.PP
+(10) I have an FSM that works with some FSM operations, but runs out
+of memory on others. Why?
+.PP
+Several FSM routines allocate internal arrays based on the maximum
+input or output label. This design choice sacrifices the range of
+usable labels for the efficiency of array access. In particular, if
+you use very large labels (e.g. INT_MAX), these routines may run out
+of memory.
+.PP
+(11) Is the FSM library thread-safe?
+.PP
+It is in the 'weak' sense -- it is thread-safe when each FSM is
+accessed or modified by only one of the threads. This requires
+that the underlying memory allocation be thread-safe; the
+FSM library provides hooks for user control of the memory
+allocation. The one exception to thread-safety is
+calls to \fRFSMLoad\fR, which modify a global data structure detailing FSM
+class properties on the first loading of each FSM class type. The user
+should protect against multiple threads simultaneously calling FSMLoad
+in this case. 
+.PP
+The FSM library is not thread-safe in the 'strong' sense where
+multiple threads try to share an FSM. The safe way to share a static
+FSM among multiple threads is to memory-map an FSM file (see below).
+.PP
+.SH EFFICIENCY ISSUES
+Having been designed for and used on very large problems, the FSM
+library can be called ``industrial strength''. In order to apply the
+library effectively to large problems, the user must be aware of
+various efficiency issues just as in any programming language.  Two
+equivalent FSM programs, in the sense of having the same input-output
+behavior, might easily differ in many orders of magnitude in their
+time and space requirements.  When novices fail to heed the caveats
+below they can be left wondering why their FSM programs don't appear
+to terminate or do terminate by exhausting all memory. First-time
+users of the FSM library may, however, wish to delay a thorough reading 
+of this section until needed, since it involves more details than others.
+.SS FACTORING
+Consider three acceptors FSA1, FSA2, and FSA3, where FSA1 and FSA2 are
+assumed to be large, complex automata, while FSA3 is a small, linear
+automaton (i.e., it contains a single path). Suppose we wish to
+intersect them together.  There are several choices in doing that.
+Although:
+.PP
+(1) \f(CWfsmintersect FSA2 FSA3 | fsmintersect FSA1 -\fR
+.PP
+(2) \f(CWfsmintersect FSA1 FSA2 | fsmintersect - FSA3\fR
+.PP
+are mathematically equivalent, (1) will be much more efficient since
+FSA3 is, by hypothesis, quite small and will result in a small
+intermediate automaton passed across the pipe. In general, a careful
+choice of factoring of otherwise mathematically equivalent expressions
+can result in large performance gains. The goal should be to keep
+intermediate results as small as possible.
+.SS INDEXING
+The intersection, composition and difference operations require one of
+their inputs to be ``indexed'' in order to work. Indexing means that
+they are put in a form that allows at each state the rapid association
+of a label with any corresponding out-going transition. If none of the
+arguments to these operations are indexed, then the second (and
+subsequent) argument(s) will be automatically converted internally to
+this format.  It is often much better for the user to manually index
+one or more of the inputs by the following rules. The first argument
+should output indexed and/or the second argument input indexed.  If
+only one is indexed, it is important to index the one with the larger
+average out-degree (i.e., average number of arcs leaving a state). 
+If the arguments are comparable in this regard,
+then it is best to index both. See FSMIndexClass in fsmclass(3) and
+\fIfsmconvert\fR in fsm(1) for more details of how and when to index. For
+example, in (1) above the default internal indexing is very sub-optimal;
+manually indexing FSA1 and FSA2 is best.
+.SS DETERMINIZATION
+In example (2) above, non-determinism in FSA1 and/or FSA2 will
+cause the intersection to take more time and memory than if they were
+deterministic.  In particular, if an intersection is called multiple
+times with one or more of the arguments held fixed, it might make
+sense to pre-determinize those argument(s) when possible.  The same is
+true if composition were instead being used, taking care to
+determinize on the sides where the labels are joined -- the output
+side of the left argument and the input side of the right argument.
+Since \fIfsmdeterminize\fR may need to introduce epsilons on the
+output side of a transducer, determinizing on the wrong side can
+introduce epsilons on the joined sides, resulting in poor composition
+speed (see the next section).
+.SS EPSILON HANDLING
+The presence of epsilons causes delays in matching, for example,
+in the joining of labels in intersection, difference and composition.
+In the case of acceptors, \fIfsmrmepsilon\fR can be used to remove the
+epsilons.  Note the algorithm is not symmetric in the sense that sometimes
+it is much more efficient in space and time to epsilon remove the
+reverse of the machine. The -r option to the \fIfsmrmepsilon\fR makes that
+easy to try. In the case of transducers, the user should take
+particular care that determinization does not introduce epsilon delays
+for composition. For example, consider two large, complex transducers
+FST1 and FST2. Then:
+.PP
+(3) \f(CWfsmdeterminize FST1 | fsmcompose - FST2\fR
+.PP
+can be a disaster, since many epsilons may need to be inserted by the
+determinization on the output side of FST1 causing the composition to
+be very slow. However,
+.PP
+(4) \f(CWfsmdeterminize FST2 | fsmcompose FST1 -\fR
+.PP
+or
+.PP
+(5) \f(CWfsminvert FST1 | fsmdeterminize | fsminvert | fsmcompose - FST2\fR
+.PP
+would be beneficial to the composition.
+.SS ENCODED MINIMIZATION
+In cases where a transducer or weighted acceptor can not be determinized
+or grows very large, a different optimization may be useful --
+\fIencoded minimization\fR. An example is:
+.PP
+.RS .5in
+\f(CWfsmencode -cl in.fsm key.fsm | fsmdeterminize |\fR
+.br
+\f(CWfsmminimize | fsmencode -cdl - key.fsm\fR
+.RE
+.PP
+These operations encode each distinct triple of an input label,
+output label and a cost into a single new label, perform classical
+(unweighted acceptor) determinization and minimization, and then
+decode the encoded labels back into their original values. On an
+idempotent semiring (see \fIfsmcost(3)\fR), the result will be equivalent
+to the input. These operations have 
+the advantage that they are always defined and that they do not move
+output labels or costs along paths. They have the disadvantage that the
+result can be neither deterministic nor minimal. A similar encoding
+can be used for just the labels (e.g., on a non-idempotent semiring)
+or costs.
+.SS MEMORY-MAPPING
+It is possible to put FSMs in a format that can be memory-mapped from
+disk. This means that only that portion of an automaton that is
+visited will be read into memory. See FSMConstClass and
+FSMConstIndexedClass in fsmclass(3). In example (1) above, if FSA1 and
+FSA2 are represented in FSMConstIndexedClass, then even though they
+are very large, the operations may be very quick, since only those
+states and arcs that intersect with FSA3 will be loaded. This is also
+a good way for multiple processes or threads to share an FSM, taking
+care that each process or thread uses a distinct load of that FSM.
+.SH AUXILIARY COMMANDS
+.B fsmrandgen
+[ -opts ]
+[
+.I file 
+]
+.PP
+.B fsmarith
+[ -opts ]
+
+.I file 
+]
+.PP
+You may find some programs among the FSM binaries that are not
+documented in fsm(1). They are of two types.  The first are programs
+whose interfaces are not yet stable enough to document. The second are
+programs that work only with specific costs and semirings.
+The FSM library proper is designed to work with any 
+cost and semiring definitions that obey the properties specified in fsmcost(3).
+Particularly useful among the otherwise undocumented programs that
+depend on the semiring are \fIfsmrandgen\fR and \fIfsmarith\fR
+both which work only when the costs are floats (as they are in the default
+compilation).
+.PP
+.I fsmrandgen
+generates a random path through an FSM by
+interpreting the costs as negative log probabilities.  Invoking with
+the -? argument will print detailed usage information.
+.PP
+.I fsmarith
+is used for incrementing or scaling the costs on a FSM. Invoking with
+the -? argument will print detailed usage information.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM C accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I far(1)
+FSM archive user programs.
+.TP 3.5i
+.I far(3)
+FSM archive C routines.
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution FSM library.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

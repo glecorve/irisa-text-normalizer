@@ -1,0 +1,135 @@
+%	percent
+pt	point
+
+# distances, area and volumes
+nm	nanometer
+µm	micrometer
+mm	millimeter
+cm	centimeter
+dm	decimeter
+m	meter
+dam	decameter
+hm	hectometer
+[Kk]ms?	kilometer
+[Kk][Pp][Hh]	kilometer per hour	PLURAL=kilometers per hour
+a	are, UNRELIABLE
+ha	hectare
+l	liter, UNRELIABLE
+dl	deciliter
+cl	centiliter
+ml	milliliter
+L	liter
+dL	deciliter
+cL	centiliter
+mL	milliliter
+cc	cubic centimeter
+ccm	cubic centimeter
+
+# weight
+µg	microgram
+mg	milligram
+g	gram
+kg	kilogram
+Kg	kilogram
+t	ton, UNRELIABLE
+T	ton, UNRELIABLE
+
+#electricity, physics
+A	ampere, UNRELIABLE
+V	volt
+eV	electronvolt
+[kK]eV	kilo-electronvolt
+MeV	mega-electronvolt
+GeV	giga-electronvolt
+W	watt, UNRELIABLE
+kW	kilo-watt
+Wh	watt hour	PLURAL=watts hour
+[Kk][Ww]h	kilo-watt hour	PLURAL=kilo-watts hour
+MWh	mega-watt hour	PLURAL=mega-watts hour
+GWh	giga-watt hour	PLURAL=giga-watts hour
+Hz	hertz	PLURAL=hertz
+hz	hertz	PLURAL=hertz
+[Kk][Hh][Zz]	kilo-hertz	PLURAL=kilo-hertz
+[Mm][Hh][Zz]	mega-hertz	PLURAL=mega-hertz
+[Gg][Hh][Zz]	giga-hertz	PLURAL=giga-hertz
+N	newton, UNRELIABLE
+°	degree
+º	degree
+ºC	degree Celsius	PLURAL=degrees Celsius
+ºF	degree Farenheit	PLURAL=degrees Farenheit
+rad	radian
+K	kelvin, UNRELIABLE
+mol	mole
+Pa	pascal
+cal	calorie
+Cal	calorie
+[Kk][Cc]al	kilo-calorie
+J	joule, UNRELIABLE
+kJ	kilo-joule
+db	decibel
+dB	decibel
+
+#computer
+B	byte, UNRELIABLE
+KB	kilobyte
+kB	kilobyte
+MB	megabyte
+GB	gigabyte
+TB	terabyte
+b	bit, UNRELIABLE
+kb	kilobit
+Kb	kilobit
+Mb	megabit
+Gb	gigabit
+Tb	terabit
+[kK][Bb][pP][sS]	kilobyte per second	PLURAL=kilobytes per second
+px	pixel
+Mpixel	megapixel
+Gpixel	gigapixel
+
+#time
+d	day, UNRELIABLE
+h	hour, UNRELIABLE
+min	minute
+mn	minute
+sec	second
+Sec	second
+s	second
+ms	millisecond
+µs	microsecond
+
+#other
+rpm	R.P.M.
+RPM	R.P.M.
+Nm	newton meter
+pp	page
+[Mm][t]\/[Yy]r	meter per year	PLURAL=meters per year
+
+#English system
+acre	acre
+bbl	barrel
+MMbbl \/ d	million barrels per day
+doz	dozen
+F	Fahrenheit, UNRELIABLE
+fl\. oz\.	fluid ounce
+ft	foot	PLURAL=feet
+gal	gallon
+gr	grain
+gro	gross
+in \.	inch
+In	inch	PLURAL=inches
+kt	karat
+kt	knot
+lb	pound
+lbs	pound
+mi	mile
+mph	mile per hour	PLURAL=miles per hour
+nm	nautical mile
+oz	ounce
+pt	point
+pts	points	PLURAL=points
+qt	quart
+tbsp	tablespoon
+tsp	teaspoon
+yd	yard
+yds	yards	PLURAL=yards

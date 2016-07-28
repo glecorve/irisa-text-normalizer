@@ -1,0 +1,182 @@
+.TH FAR 1 "" "Version 4.0"
+
+.SH NAMES
+
+farsplit, farinfo, farfilter, farcompilestrings, farprintstrings 
+- finite-state machine archive utilities
+.PP
+.SH SYNOPSIS
+.B farsplit
+[ -n
+.I fieldsize
+]
+[ -r
+.I root
+]
+[ -x
+.I ext
+]
+[
+.I far
+]
+.PP
+.B farinfo
+[ -vp ]
+{
+.I far
+]
+.PP
+.B farfilter
+.I command
+[
+.I far
+]
+.PP
+.B farcompilestrings
+[ -i
+.I symbols
+] 
+[ -u
+.I unknown_symbol
+] 
+[ -f \fIfsmclass\fR ]
+[ -s \fIsemiring\fR ]
+[
+.I file 
+]
+.PP
+.B farprintstrings
+[ -i
+.I symbols
+] 
+[ -o
+.I symbols
+] 
+[ -n
+.I nbest
+] 
+[ -chp12 ]
+[
+.I far
+]
+.PP
+.SH DESCRIPTION
+These commands manipulate 
+.I weighted finite-state machines archives (FARs).
+A FAR archive is simply the concatentation of 
+the file representation of one or more finite-state machines.
+The FAR representation
+is convenient for dealing with large numbers of related FSMs (see
+fsmintro(1) for an introduction to the (non-archive) FSM utilities and
+data representations).  An example from speech recognition is storing
+the FSM representation of speech transcriptions or segmentations or
+recognition lattices of multiple utterances from one or more speakers
+in a single FAR rather than in a directory full of indiviual FSM
+files. A FAR archive can be created from individual binary FSM files
+(see fsm(1)) by using (for example) the UNIX command
+.I cat.
+.PP
+.I farsplit
+splits a FAR archive into its component FSMs. They are
+named, by default, 0001.fsm, 0002.fsm, etc. With the
+\fI-x\fR option, the extension can changed. With
+the \fI-r\fR option, a 'root' name can be prepended.
+With the \fI-n\fR option, the numeric field size
+can changed from the default of 4.
+.PP
+.I farinfo
+sends to standard output the following information about a FAR
+archive -- the number of acceptors, the number of transducers, the
+total number of states and the total number of transitions represented by the FSMS in the archive. With the \fI-v\fR flag, similar information per FSM is provided.
+With the \fI-p\fR flag, this information is sent instead to standard error
+and a copy of the input is sent to standard output.
+.PP
+For each FSM in the archive,
+.I farfilter
+invokes 
+.I command
+and sends that FSM to the command's standard input. This makes it easy to
+apply the (non-archive) FSM utilities to a FAR archive.
+For example,
+.PP
+\f(CW farfilter "fsmproject -2 | fsmrmepsilon" <fst.far >fsa.far
+.PP
+converts an archived collection of transducers to epsilon-free acceptors.
+.PP
+.I farcompilestrings
+converts each line of text in
+.I file
+to a single-path FSM; one transition is created in sequence for each label on the line.
+By default, these labels are integers. With the \fI-i\fR option, textual
+names specified by the
+.I symbols
+file are used (see fsm(5)).
+By default, if a symbol is encountered in the input text that is missing
+from the symbols file, then a fatal error is reported. 
+However with the \fI-u\fR option,  \fIunknown_symbol\fR (which
+must be present in the symbols file) is instead substituted for any missing symbols.
+The \fI-f\fR option
+specifies the FSM representation class (see \fIfsmclass(3)\fR);
+by default, it is
+.I FSMBasicClass.
+The \fI-s\fR option
+specifies the cost semiring (see \fIfsmcost(3)\fR);
+by default, it is
+.I SMRTropical.
+The resulting FSMs are returned as a FAR archive on standard output.
+.PP
+.I farprintstrings 
+prints paths in the FAR archive. By default, it
+prints nothing. With the -1 option, it sends to standard output the
+input labels along the best (lowest cost) path in each FSM in the
+archive. Each path is a single line and the transition labels are printed in
+sequence as textual integers separated by spaces. 
+With the \fI-i\fR option, textual names specified by the
+.I symbols
+file are used. The \fI-2\fR and \fI-o\fR options can be used to
+print the output labels instead or as well. The \fI-c\fR appends
+the path's cost to each line; it is separated from the path labels
+by a tab. The \fI-n\fR option
+can be used to print the
+.I nbest 
+paths per FSM rather than just the 1-best. In this case, each path
+is printed on a separate line and a blank line is printed at the end of 
+each FSM's output for clarity. With the \fI-u\FR option, the nbest
+.I unique 
+paths per FSM are printed (with \fI-n\fR).
+The \fI-h\fR option prints a one line descriptive header prior to each 
+FSM's output. The \fI-p\fR option sends the  above output 
+instead to standard error and copies the input FAR archive to standard output. 
+This allows 
+.I fsmprintstrings 
+to be conveniently used in pipelines.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I far(3)
+FSM archive C routines.
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

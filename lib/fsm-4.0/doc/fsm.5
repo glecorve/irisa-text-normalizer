@@ -1,0 +1,225 @@
+.TH FSM 5 "" "Version 4.0"
+
+.SH NAMES
+FSM acceptor files, FSM transducer files, FSM symbols files - finite-state 
+machine text file formats
+.SH DESCRIPTION
+
+.SS ACCEPTORS
+The usual notion of finite-state acceptor is generalized here to
+include costs -- each arc has a cost associated with making that 
+transition and each state has a final cost associated with accepting 
+at that state.
+.PP
+The following is the text representation of a (weighted) acceptor:
+.PP
+.RS 3
+.B (1)
+Each state in the acceptor is specified by a non-negative
+integer. Each distinct arc symbol is specified by a non-negative
+integer. \f(CW0\fR is reserved for the epsilon string (epsilon). Each
+arc cost is represented as a floating point number (in the default 
+compilation).
+.PP
+.B (2) 
+For each arc in the acceptor, there is a line of the form:
+.PP
+.RE
+\f(CW      S1    S2     A     C \fR
+.PP
+.RS 3
+where 
+.I S1 
+is the source state number, 
+.I S2 
+is the destination state number,
+.I A 
+is the arc symbol number and 
+.I C 
+is the arc cost. The last field is optional;
+if it is omitted, the arc is assigned cost \f(CWSMROne\fR
+(see \fIfsmcost(3)\fR).
+.PP
+.B (3) 
+For each final state, there is a line of the form:
+.RE
+.PP
+\f(CW      S      C \fR
+.PP
+.RS 3
+where 
+.I S 
+is the state number and
+.I C
+is the cost of accepting at that state.  The second field is optional;
+if it is omitted, the state is accepted with cost \f(CWSMROne\fR. 
+.PP
+.B (4) 
+The complete printed representation of the acceptor consists 
+of lines of the form in 
+.B (2) 
+and 
+.B (3). 
+The initial state is, by convention, the source state on the first line.
+.PP
+.RE
+For example, the acceptor represented by a file containing:
+.PP
+\f(CW      0     0     1     .5 \fR\br
+\f(CW      0     1     2     .3 \fR\br
+\f(CW      1     2     3     .6 \fR\br
+\f(CW      1     2     4     .6 \fR\br
+\f(CW      2
+.PP
+accepts strings of the (\fIgrep\fR) form \fIx*y[zw]\fR, 
+where
+.I x, y, z, w
+are the symbols numbered \f(CW 1, 2, 3, 4,\fR
+respectively.
+If the accepted string 
+has
+.I N
+occurrences of
+.I x,
+then its cost is 
+.I .5 N + .9, 
+using the (default) tropical cost semiring (see \fIfsmcost(3)\fR).
+.SS TRANSDUCERS
+The text representation of a (weighted) transducer is similar to
+that of an acceptor, except lines 
+.B (1) 
+and 
+.B (2) 
+are modified above to
+allow for both
+.I input 
+and
+.I output
+symbols:
+.PP
+.RS 3
+.B (1') 
+Each state in the machine is specified by a non-negative
+integer. Each distinct input symbol is specified by a non-negative
+integer. Each distinct output symbol is specified by a non-negative
+integer. \f(CW0\fR is reserved for the empty string (epsilon).
+Each arc cost is represented as a floating point number (in the default 
+compilation).
+.PP
+.B (2') 
+For each arc in the transducer, there is a line of the form:
+.RE
+.PP
+\f(CW      S1    S2    IA    OA    C \fR
+.PP
+.RS 3
+where 
+.I S1 
+is the source state number, 
+.I S2 
+is the destination state number,
+.I IA 
+is the input symbol number, 
+.I OA 
+is the output symbol number, and 
+.I C 
+is the arc cost. The last field is optional;
+if it is omitted, the arc is assigned cost \f(CWSMROne\fR.
+.RE
+.SS SYMBOL NAMES
+In the above formats, any text string that
+excludes whitespace may be substituted for 
+the numbers in the state, input symbol and output symbol fields, 
+provided that appropriate mappings from text strings to numbers are supplied
+in 
+.I symbols
+files.
+A 
+.I symbols
+file consists of lines with two fields separated by whitespace.
+The first field contains a text string and the second field
+its corresponding number. For a state
+.I symbols 
+file, there must be a text string for every
+state number encountered. Similarly, for input and output symbol 
+.I symbols 
+files.
+.PP
+For example, the acceptor represented by a file containing:
+.PP
+\f(CW      BEG   BEG   RED   .5 \fR\br
+\f(CW      BEG   MID   GREEN .3 \fR\br
+\f(CW      MID   END   BLUE  .6 \fR\br
+\f(CW      MID   END   BLACK .6 \fR\br
+\f(CW      END
+.PP
+with the state symbols file:
+.PP
+\f(CW      BEG   0 \fR\br
+\f(CW      MID   1 \fR\br
+\f(CW      END   2 \fR\br
+.PP
+and (input) arc symbols file:
+.PP
+\f(CW      RED   1 \fR\br
+\f(CW      GREEN 2 \fR\br
+\f(CW      BLUE  3 \fR\br
+\f(CW      BLACK 4 \fR\br
+.PP
+is identical to the previous example above.
+.SH CAVEATS
+.PP
+Since some FSM commands (like \fIFSMConcat\fR and \fIFSMClosure\fR) introduce
+epsilon symbols into their outputs, it is recommended that a label
+for 0, the epsilon ID, be included in all symbols files.
+.PP
+Some FSM operations allocate internal arrays based on the
+maximum integer used as an input or output arc symbol. 
+This design choice, chosen for efficiency, requires the user to 
+avoid huge integer labels (e.g., INT_MAX) since memory may
+otherwise be exhausted.
+.PP
+When 
+.I fsmprint
+is given the \fI-l\fR option,
+additional information is output that when read by
+.I fsmcompile
+preserves the state potentials, the FSM class, the cost semiring, and 
+whether it is an acceptor or transducer (overriding any conflicting 
+command line options).
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user commands.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM C accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmclass(3)
+FSM class description.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

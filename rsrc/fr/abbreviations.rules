@@ -1,0 +1,139 @@
+# 1 degré ou premièrement
+(?<! de | à )1°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => primo
+(?<! de | à )2°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => secundo
+(?<! de | à )3°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => tertio
+(?<! de | à )4°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => quatrièmement
+(?<! de | à )5°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => cinquièmement
+#(?<!de | à )6°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => sexto
+#(?<!de | à )7°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => septimo
+#(?<!de | à )8°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => octavo
+#(?<!de | à )9°(?! \d+| à| de|C| C| Celsius|F| F| Farenheit) => nono
+
+Corp\. => Corp .
+Ltd\. => Ltd .
+
+apr?\. J\.\-C\. => après Jésus-Christ
+av\. J\.\-C\. => avant Jésus-Christ
+apr?\. J\.C\. => après Jésus-Christ
+av\. J\.C\. => avant Jésus-Christ
+après J\.-?C\. => après Jésus-Christ
+avant J\.-?C\. => avant Jésus-Christ
+M \. -Tout- le-Monde => Monsieur tout le monde
+J O => JO
+J\. ?O\. => JO
+
+
+# titre
+Dr\.? => Docteur
+Drs\.? => Docteurs
+#LL\.AA\. => leurs Altesses
+#LL\.AA\.II\. => leurs Altesses royales impériales
+#LL\.AA\.RR\. => leurs Altesses royales
+#LL\.AA\.SS\. => leurs Altesses sérénissimes
+#LL\.EE\. => leurs Excellences
+#LL\.MM\. => leurs Majestés
+#LL\.MM\.II\.RR\. => leurs Majestés impériales et royales
+Me => Maître
+(?<![A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]\. )[mM]\.(?! [A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]\. ) => Monsieur
+[Mm]m => Madame
+[Mm]me => Madame
+[Mm]mes => Mesdames
+[Mm]lle => Mademoiselle
+[Mm]lles => Mesdemoiselles
+[Mm][Mm]\. => Messieurs
+Mr => Mister
+Mrs => Messieurs
+Mgr\.? => Monseigneur
+NN\.SS\. => Nosseigneurs
+Prs\.? => Professeurs
+Pr\.? => Professeur
+St\.? => saint
+Ste => sainte
+#SS\. => saints
+#S\.S\. => sa Sainteté
+#S\.A\. => son Altesse
+#S\.A\.I\. => son Altesse impériale
+#S\.A\.R\. => son Altesse royale
+#S\. ?A\. ?S\. => son Altesse sérénissime
+#S\.E\. => son Excellence
+#S\.M\. => sa Majesté
+#S\.M\.I\.R\. => sa Majesté impériale et royale
+#Vve => Veuve
+
+#mois
+[aA][vp]r\. => avril
+[aA]ug\. => août
+[dD]ec\. => décembre
+[fF]e[bv]\. => février
+[jJ]an\. => janvier
+[jJ]ul\. => juillet
+[jJ]un\. => juin
+[mM]ar\. => mars
+[nN]ov\. => novembre
+[oO]ct\. => octobre
+[sS]ept?t?\. => septembre
+
+#autres
+[Ss]té\. => Société
+[Nn]° => numéro
+[Nn]um\. => numéro
+[Tt]él\. => téléphone
+
+art\. => article
+ann\. => annexe
+appt => appartement 
+apr\. => après
+av\. => avant
+auj\. => aujourd'hui
+
+bât\. => bâtiment
+bd\. => Boulevard
+boul\. => Boulevard
+Bd => Boulevard
+bd(?=(?: [A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ])) => Boulevard
+
+c\.-à-d\. => c'est-à-dire
+c\.-a-d\. => c'est-à-dire
+c-à-d => c'est-à-dire
+c-a-d => c'est-à-dire
+
+chap\. => chapitre
+Cie => compagnie
+
+d° => dito
+dir\. => directeur
+
+éd\. => édition
+éds\. => éditions
+e\. g\. => du latin exempli gratia => par exemple
+et al\. => du latin et alii => et autres
+etc\. => et caetera
+
+fém\. => féminin
+fig\. => figure
+f° => folio
+
+ibid\. => ibidem
+i\. ?e\. => c'est-à-dire
+
+
+loc\. cit\. => loco citatio
+
+masc\. => masculin
+
+N\.D\.L\.R\. => note de la rédaction
+N\.D\.T\. => note du traducteur
+
+N\.S => notre Seigneur
+N\.D => notre Dame
+op\. cit => opere citatio
+p\.(?= \d+) => page
+pp\.(?= \d+) => pages
+p\. ?ex\. => par exemple
+r° => recto
+[Tt]él\.? => téléphone
+v\. o\. => VO
+v° => verso
+vol\. => volume
+vols\. => volumes
+vs\. => versus

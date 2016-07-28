@@ -1,0 +1,55 @@
+.TH FAR 3 "" "Version 4.0"
+
+.SH NAMES
+
+FSMArchiveRead, FSMArchiveWrite
+- finite-state machine archive C routines
+.PP
+.SH SYNOPSIS
+\fB#include "fsm.h"
+.PP
+\fBFSMArchiveRead(FILE *fp, char *file, int file_pos)
+.PP
+\fBFSMArchiveWrite(FILE *fp, Fsm fsm, char *file, int file_pos)
+.PP
+.SH DESCRIPTION
+These commands read and write finite-state machines (FSMs) to and from
+finite-state machines archives (FARs). See far(1) for information about FARs.
+.PP
+.I FSMArchiveRead 
+reads the next FSM from a FAR. User-provided FILE and FILE_POS (typically 
+the ordinal FSM # in the file) are used in error messages.
+.PP
+.I FSMArchiveWrite
+writes the next FSM To a FAR. User-provided FILE and FILE_POS (typically 
+the ordinal FSM # in the file) are used in error messages.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I far(1)
+FSM archive user programs.
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.

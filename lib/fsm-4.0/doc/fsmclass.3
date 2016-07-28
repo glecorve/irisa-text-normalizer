@@ -1,0 +1,242 @@
+.TH FSMCLASS 3 "" "Version 4.0"
+
+.SH NAMES
+FSMClass, FSMBasicClass, FSMPruneClass, FSMEpsilonClass, FSMInputEpsilonClass,
+FSMOutputEpsilonClass,
+FSMGroupedClass, FSMInputGroupedClass, FSMOutputGroupedClass, 
+FSMIndexedClass, FSMInputIndexedClass, FSMOutputIndexedClass, 
+FSMConstClass, FSMConstEpsilonClass, FSMConstIndexedClass, 
+FSMConstInputIndexedClass, FSMConstOutputIndexedClass,
+FSM1Class,
+FSMGetClass, FSMClassName, FSMTestClass - FSM class description
+.PP
+.SH SYNOPSIS
+.B #include """fsm.h"""
+.PP
+\fBFSMClass FSMBasicClass, FSMPruneClass, FSMEpsilonClass, 
+FSMInputEpsilonClass, FSMOutputEpsilonClass, 
+FSMGroupedClass, FSMInputGroupedClass, FSMOutputGroupedClass, 
+FSMIndexedClass, FSMInputIndexedClass, FSMOutputIndexedClass, 
+FSMConstClass, FSMConstIndexedClass, 
+FSMConstInputIndexedClass, FSMConstOutputIndexedClass,
+FSM1Class\fR
+.PP
+\fBFSMClass FSMGetClass(Fsm fsm)
+.PP
+\fBchar *FSMClassName(Fsm fsm)
+.PP
+\fBunsigned FSMTestClass(FSMClass clas, unsigned ops)
+.PP 
+.SH DESCRIPTION
+.PP
+The FSM library supports multiple FSM formats. The format
+of an FSM is specified by its
+.I FSMClass.
+While the user may define their own class to create
+a new kind of FSM for a particular application (see \fIfsmobject(3)\fR),
+there are various pre-defined classes, which should meet
+most needs. FSMs can be created, copied to or converted 
+to these classes (see \fIfsm(3)\fR).
+.SS MUTABLE CLASSES
+The following classes support most if not all of mutating operations 
+described in \fIfsmaccess(3)\fR. Their binary file representations are
+portable across architectures that differ only in the standard byte
+swap orders (\fIbig\fR and \fIlittle endian\fR).
+.I FSMBasicClass
+uses a general-purpose FSM representation that supports all
+operations specified in \fIfsmaccess(3)\fR except the specialized 
+operations
+.I FSMNumInputEps, 
+.I FSMNumOutputEps,
+.I FSMSeekEps,
+.I FSMSeekNonEps,
+and
+.I FSMSeekLabel.
+.PP
+.I FSMPruneClass
+uses a representation that is more efficient in time and space than 
+.I FSMBasicClass
+when many deletions of states and arcs are needed. It supports
+all the operations that 
+.I FSMBasicClass
+does except
+.I FSMSeekPos.
+.PP
+The epsilon classes support specialized operations concerning epsilon
+transitions.
+.I FSMInputEpsilonClass
+supports the operations
+.I FSMNumInputEps,
+.I FSMSeekEps,
+and
+.I FSMSeekNonEps,
+with the seeks being on the input labels.
+.I FSMOutputEpsilonClass
+supports the operations
+.I FSMNumOutputEps,
+.I FSMSeekEps,
+and
+.I FSMSeekNonEps,
+with the seeks being on the output labels.
+.I FSMEpsilonClass
+(acceptors only) supports all these operations.
+These epsilon classes also support all operations
+of 
+.I FSMBasicClass
+except
+.I FSMAddArcs.
+.PP
+The grouped classes maintain a specialized ordering of the arcs by label.
+.I FSMInputGroupedClass,
+.I FSMOutputGroupedClass,
+and (acceptors only)
+.I FSMGroupedClass
+support the same operations as the corresponding epsilon class above, and,
+in addition, arcs with the same label are grouped together.
+For transducers, the grouping is with respect
+to the input labels for 
+.I FSMInputGroupedClass
+and to the output labels for
+.I FSMOutputGroupedClass.
+.PP
+The indexed classes support specialized label matching.
+.I FSMInputIndexedClass,
+.I FSMOutputIndexedClass,
+and (acceptors only)
+.I FSMIndexedClass
+support the same operations (and arc groupings) as the corresponding 
+grouped class above, and, in
+addition, they support the
+.I FSMSeekLabel
+operation,
+with the seeks being on the input labels, output labels and either,
+respectively. For
+.I fsmintersect,
+.I fsmcompose,
+and
+.I fsmdifference,
+the first argument should be output indexed or the second argument
+input indexed.  If not, internal conversions must be done. It is best 
+to index the one with the larger average out-degree (i.e., average number 
+of arcs leaving a state). If the arguments
+are comparable in this regard, then it is best to index both. 
+Note for acceptors, FSMIndexClass indexes on both the input and 
+outside sides.
+.SS READ-ONLY CLASSES
+The following classes do not support the mutating operations described
+in \fIfsmaccess(3)\fR. This restriction allows several benefits.
+First, the binary file representation of these
+classes, when possible, will be memory mapped (see \fImmap(2)\fR) when
+loaded.  This can greatly reduce I/O when an FSM is sparsely
+accessed. However these files, unlike the mutable classes, are
+not portable across architectures that have different byte swap orders.
+Second, information such as whether the FSM is acyclic
+or determnistic can be pre-computed and stored in the FSM.
+Thus, all these classes provide complete
+.I FSMProps
+information, whereas the mutable classes typically have available only
+very limited information. 
+.PP
+.I FSMConstClass
+is a general-purpose read-only FSM representation. It supports the
+same non-mutating operations.
+.PP
+.I FSMConstIndexedClass,
+.I FSMConstInputIndexedClass,
+and
+.I FSMConstOutputIndexedClass
+support the same non-mutating operations as
+.I FSMIndexedClass,
+.I FSMInputIndexedClass,
+and
+.I FSMOutputIndexedClass,
+respectively.
+.PP
+.SS DEPRECATED CLASSES
+.I FSM1Class
+uses the obsolete 
+.I FSM-1
+library format, which is provided for backward compatability. It supports
+only the required, copying and read/write operations.
+.PP
+In addition to these classes, the FSM library supports
+several internal FSM classes, e.g.,
+those used for the output of delayed composition and caching.
+These classes maintain the internal state of some computation
+that is performed as states are expanded.
+.SS CLASS UTILITIES
+.I FSMGetClass
+returns the class of 
+.I fsm.
+.PP 
+.I FSMClassName
+returns a null-terminated string that describes the class.
+.PP
+.I FSMTestClass
+is used to determine if an FSM \fIclass\fR supports a particular
+operation (see \fIoptional operations\fR in \fIfsmaccess(3)\fR) or has 
+a particular property (such as \fIFSM_CLASS_ARCSPERSISTENT\fR). It is passed 
+an unsigned int that may have any of the FSM class property bits set as 
+specified in "fsmprops.h". It returns an unsigned int that has one of 
+these bits set if and only if it was
+specified in the input and that property is true for the FSM class.
+.SH SEE ALSO
+.PD 0
+.TP 3.5i
+.I fsmintro(1)
+Intro. to the FSM programs and library.
+.TP 3.5i
+.I fsm(1)
+FSM user programs.
+.TP 3.5i
+.I fsm(3)
+FSM C library.
+.TP 3.5i
+.I fsmaccess(3)
+FSM accessors.
+.TP 3.5i
+.I fsmcost(3)
+FSM cost definitions.
+.TP 3.5i
+.I fsmobject(3)
+FSM object definition.
+.TP 3.5i
+.I fsm(5)
+FSM file formats.
+.TP 3.5i
+.I dst(3)
+Data structures library.
+.TP 3.5i
+.I http://www.research.att.com/sw/tools/fsm
+FSM home page -- software, documentation and references.
+.SH FILES
+.PD 0
+.TP 3.5i
+.I /n/lvr/linux/include/fsm-4
+Distribution FSM include files.
+.TP 3.5i
+.I /n/lvr/linux/include/dst-4
+Distribution data structures include files.
+.TP 3.5i
+.I /n/lvr/linux/lib/libfsm-4.{a,so}
+Distribution FSM library.
+.TP 3.5i
+.I /n/lvr/linux/lib/libdst-4.a
+Distribution data structures library.
+.TP 3.5i
+.I /n/lvr/linux/bin/fsm-4
+Distribution binaries.
+.TP 3.5i
+.I /n/lvr/linux/src/cmd/fsm/fsm-4
+Distribution sources.
+.PP
+.SH AUTHORS
+Cyril Allauzen (allauzen@research.att.com)
+.br
+Mehryar Mohri (mohri@research.att.com)
+.br
+Fernando Pereira (pereira@cis.upenn.edu)
+.br
+Michael Riley (riley@research.att.com)
+.PP
+\fBCopyright (C) 1998-2003 AT&T Corp. All rights reserved.
