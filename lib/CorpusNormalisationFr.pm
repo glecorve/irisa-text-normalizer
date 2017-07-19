@@ -23,7 +23,7 @@ use Unicode::Normalize;
 use Lingua::FR::Numbers qw(number_to_fr ordinate_to_fr);
 
 use utf8;
-use open qw(:std :utf8);
+# use open qw(:std :utf8);
 
 use Exporter;
 
@@ -1331,7 +1331,7 @@ sub telephone {
 		my $w = shift;
 		return $w if $w =~ /^(18|19|20)\d\d-(18|19|20)\d\d$/;
 		return $w if (($w =~ /-.*\./) || ($w =~ /\..*-/));
-		return $w if  $w =~ /^\d{1-3}[\.\-]\d{1,3}$/;
+		return $w if  $w =~ /^\d\{1-3\}[\.\-]\d{1,3}$/;
 		return $w if  $w =~ /^[01][0-9][\.\-][0-3][0-9][\.\-]\d\d\d?\d?$/;
 		return $w if  $w =~ /^[0-3][0-9][\.\-][12][0-9][\.\-]\d\d\d?\d?$/;
 		$w =~ s/[-\.]/ /g;
@@ -1931,7 +1931,7 @@ sub remove_diacritics {
 	$s =~ s/\xfc/ue/g;
 	$s =~ s/\xff/yu/g;
 
-	#$s = Encode::decode( 'utf8', $s );  
+	$s = Encode::decode( 'utf8', $s );  
 	$s = NFD( $s );   ##  decompose (Unicode Normalization Form D)
 # 	$s =~ s/\pM//g;         ##  strip combining characters
 	
@@ -1957,7 +1957,7 @@ sub remove_diacritics {
 
 	$s = NFC($s);
 	
-	#return Encode::encode('utf8', $s);;
+	return Encode::encode('utf8', $s);;
 	return $s;
 }
 

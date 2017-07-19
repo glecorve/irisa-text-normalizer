@@ -20,22 +20,25 @@ See INSTALL file
 
 # Commands
 
+LANGUAGE="en"
+# (or "fr")
+
 ## Tokenisation
 
-    perl bin/basic-tokenizer.pl examples/text.raw > examples/text.tokenized
+    perl bin/$LANGUAGE/basic-tokenizer.pl examples/$LANGUAGE/text.raw > examples/$LANGUAGE/text.tokenized
 
 ## Generic normalisation
 
-    perl bin/start-generic-normalisation.pl examples/text.tokenized > examples/text.norm.step1
-    bash bin/tag-named-entities.sh examples/text.norm.step1 > examples/text.norm.step2
-    perl bin/end-generic-normalisation.pl examples/text.norm.step2 > examples/text.norm.step3
+    perl bin/$LANGUAGE/start-generic-normalisation.pl examples/$LANGUAGE/text.tokenized > examples/$LANGUAGE/text.norm.step1
+    bash bin/$LANGUAGE/tag-named-entities.sh examples/$LANGUAGE/text.norm.step1 > examples/$LANGUAGE/text.norm.step2
+    perl bin/$LANGUAGE/end-generic-normalisation.pl examples/$LANGUAGE/text.norm.step2 > examples/$LANGUAGE/text.norm.step3
     
 or simply:
 
-    bash bin/generic-normalisation.sh text-normalisation/examples/text.tokenized
+    bash bin/$LANGUAGE/generic-normalisation.sh text-normalisation/examples/$LANGUAGE/text.tokenized
 
 ## 2 examples of specific normalisations
 
-    perl bin/specific-normalisation.pl cfg/asr.cfg examples/text.norm.step3 > examples/text.asr
-    perl bin/specific-normalisation.pl cfg/indexing.cfg examples/text.norm.step3 > examples/text.indexing
+    perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/asr.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.asr
+    perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/indexing.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.indexing
 
