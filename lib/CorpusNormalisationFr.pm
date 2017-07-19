@@ -2186,7 +2186,7 @@ sub end {
 	trim_blanks($P_TEXT);
 	
 	# Remove undesired characters
-	#$$P_TEXT = Encode::decode_utf8($$P_TEXT);
+	$$P_TEXT = Encode::decode_utf8($$P_TEXT);
 	$$P_TEXT =~ s/;/,/g;	
 	$$P_TEXT =~ s/[^A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝa-zàáâãäåçèéêëìíîïñòóôõöøùúûüýÿ0-9"'_\+\-\!,;:¡¿\?\.\nß&<>\/ ]/ /g;	
 	$$P_TEXT =~ s/( |^)[^[:alpha:]"\.\?!,; ]($END_SEP) /$1 $2/gm;
@@ -2195,7 +2195,7 @@ sub end {
 	$$P_TEXT =~ s/( |^)([^<]+)>( |\n|$)/$1$2$3/gm;
 #	$$P_TEXT =~ s/( |^)<([^>]+?)( |\n|$)/$1$2$3/gm;
 #	$$P_TEXT =~ s/( |^)([^< ]+?)>( |\n|$)/ $1$2/gm;
-	#$$P_TEXT = Encode::encode_utf8($$P_TEXT);
+	$$P_TEXT = Encode::encode_utf8($$P_TEXT);
 
 	
 	#no hyphen between spaces at the beginning/end of a proper name or number
@@ -2203,13 +2203,6 @@ sub end {
 	$$P_TEXT =~ s/ -$/$1/gm;
 	$$P_TEXT =~ s/(^| |\b)([A-Z0-9]\.?(?:[a-zA-Z0-9\-]\.?)+)-( |\n|$)/$1$2$3/gm;
 	$$P_TEXT =~ s/(^| )-([A-Z0-9]\.?(?:[a-zA-Z0-9\-]\.?)+)( |\b|\n|$)/$1$2$3/gm;
-	
-# 	#make sure Saxon genitives are not segmented
-# 	$$P_TEXT =~ s/ ([\!\?\.]) '([a-z]{1,2})($END_SEP)/'$2 $1 $3/gm;
-# 	$$P_TEXT =~ s/ (<\/[A-Z]+>) *'([a-z]{1,2})($END_SEP)/'$2 $1 $3/gm;
-# 	$$P_TEXT =~ s/ '([st])($END_SEP)/'$1$2/gm;
-# 	trim_blanks($P_TEXT);
-	
 	
 	# /xXx -> slash xXx
 	$$P_TEXT =~ s/(^| )\//$1 slash/gm;
