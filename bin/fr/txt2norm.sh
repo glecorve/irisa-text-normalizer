@@ -3,7 +3,7 @@
 # Normalizes the input text file and outputs the nromalized form
 
 NORMA=`dirname $0`/../..
-SPEC_NORM=$NORMA/cfg/asr_ami.cfg
+SPEC_NORM=$NORMA/cfg/none.cfg
 while getopts ":s:" opt; do
   case $opt in
     s)

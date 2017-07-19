@@ -292,8 +292,6 @@ sub tok {
   $res =~ s/ $//g;
   $res =~ s/^ //g;	    
 
-        print STDERR $res."\n";
-  
   #downcase sequence of 4+ uppercase words
   $res =~ s/(^| )([A-Z][A-Z0-9'-]*) ((?:[A-Z0-9][A-Z0-9'-]* ?,? ){1,})([A-Z][A-Z0-9'-]+)/$1.ucfirst(lc($2)).lc(" $3 $4")/gem;
 	    

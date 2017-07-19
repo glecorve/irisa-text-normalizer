@@ -104,7 +104,7 @@ $TEXT =~ s/(«|»|")(\n|\b)/ $1 $2 /mg;
 #143.945
 
 #############################################################
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Transformation to an English compliant form.";
+$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Transformation to a French-compliant form.";
 	$TEXT = remove_diacritics($TEXT);
 	define_rule_preprocessing("perl ".dirname( abs_path(__FILE__) )."/remove-diacritics.pl");
 $VERBOSE && print STDERR ".";
