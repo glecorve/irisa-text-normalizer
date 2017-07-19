@@ -7,7 +7,7 @@ SPEC_NORM=$NORMA/cfg/asr_ami.cfg
 while getopts ":s:" opt; do
   case $opt in
     s)
-      SPEC_NORM=$OPTARG
+      SPEC_NORM=$NORMA/cfg/$OPTARG.cfg
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
