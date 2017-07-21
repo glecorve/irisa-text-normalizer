@@ -19,7 +19,7 @@ use capLetter;
 # setlocale(LC_CTYPE, "UTF8");
 # setlocale(LC_COLLATE, "UTF8");
 use strict;
-use CorpusNormalisationEn;
+use CorpusNormalisationFr;
 use NormalisationOptions;
 
 my $RSRC = dirname( abs_path(__FILE__) )."/../../rsrc/fr";
