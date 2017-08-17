@@ -20,8 +20,8 @@ See INSTALL file
 
 ## Commands
 
-LANGUAGE="en"
-# (or "fr")
+> LANGUAGE="en"
+> # (or "fr")
 
 ### Tokenisation
 
