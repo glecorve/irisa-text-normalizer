@@ -21,7 +21,7 @@ See INSTALL file
 ## Commands
 
 > LANGUAGE="en"
-> # (or "fr")
+> \# (or "fr")
 
 ### Tokenisation
 
