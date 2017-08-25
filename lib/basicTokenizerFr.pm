@@ -26,14 +26,14 @@ my $dirRessources = dirname( abs_path(__FILE__) )."/../rsrc/fr";
 # file with a list of abbreviations
 my $fileAbbr = "$dirRessources/abbrev.lst";
 
-my $quotes = "[\"«»]";
+my $quotes = "\"|\xC2\xAB|\xC2\xBB";
 my $paren = "[\\(\\)\\{\\}\\[\\]]";
 my $operators  = "[+=÷×\/]";
 my $plusminus = "±";
-my $punct1 = "[,;:\?\!¡¿]";
+my $punct1 = ",|;|:|\\?|!|\x{C2}\x{A1}|\x{C2}\x{BF}";
 my $punct2 = "[\-_]";
-my $punct = "[,;:\?\!\_\.\-¡¿]";
-my $webdomain = "com|net|org|co\.uk|fr|gov|de|ch|es|it|info";
+my $punct = ",|;|:|\\?|!|\_|\\.|\-|\x{C2}\x{A1}|\x{C2}\x{BF}";
+my $webdomain = "com|net|org|co\.uk|fr|gov|de|ch|es|it|info|io";
 
 
 # Separate strings at the beginning of words
@@ -43,14 +43,14 @@ my $beginString='[dcjlmnstDCJLMNST]\'|[Qq]u\'|[Jj]usqu\'|[Ll]orsqu\'|[Pp]uisqu\'
 # Separate strings at the end of words
 my $endString='-t-elles?|-t-ils?|-t-on|-t-en|-ce|-elles?|-ils?|-je|-la|-les?|-leur|-lui|-mêmes?|-m\'|-moi|-nous|-on|-toi|-tu|-t\'|-vous|-en|-y|-ci|-là';
 # exceptions where the words musn't be split
-my $endExcept = '-t-elles?|-t-ils?|-t-on|-t-en|[rR]endez-vous|[eE]ntre-lui|[cC]hez-[mt]oi|[cC]hez-nous';
+my $endExcept = '-t-elles?|-t-ils?|-t-on|-t-en|[rR]endez-vous|[eE]ntre-lui|[cC]hez-[mts]oi|[cC]hez-nous';
 
 
 my %abbr = ();
 my %begExcept = ();
 # for latin-9 (ISO 8859-15)
 our $alphanum = "[0-9a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
-our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]"; 
+our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
 our $upper = "[A-ZÀ-ÖØ-ÞŠŽŒŸ]";
 our $downer = "[a-zà-öø-ÿŠŽŒŸ]";
 
@@ -112,7 +112,7 @@ sub tok {
   my $intok = shift;
   my $res = "";
 
-  ##  if your data comes in Latin-1, then uncomment:
+  #  if your data comes in Latin-1, then uncomment:
   $intok =~ s/α/alpha/g;
   $intok =~ s/β/beta/g;
   $intok =~ s/γ/gamma/g;
@@ -123,38 +123,54 @@ sub tok {
   $intok =~ s/λ/lambda/g;
   $intok =~ s/Λ/lambda/g;
   #$intok = Encode::decode( 'utf8', $intok );
-  $intok =~ s/\xe4/ae/g;  ##  treat characters ä ñ ö ü ÿ
-  $intok =~ s/\xf1/ny/g;  ##  this was wrong in previous version of this doc
-  $intok =~ s/\xf6/oe/g;
-  $intok =~ s/\xfc/ue/g;
-  $intok =~ s/\xff/yu/g;
-  $intok =~ s/\x{00df}/ss/g;  ##  German beta “ß” -> “ss”
-  $intok =~ s/\x{00c6}/AE/g;  ##  Æ
-  $intok =~ s/\x{00e6}/ae/g;  ##  æ
-  $intok =~ s/\x{0132}/IJ/g;  ##  Ĳ
-  $intok =~ s/\x{0133}/ij/g;  ##  ĳ
-  $intok =~ s/\x{0152}/Oe/g;  ##  Œ
-  $intok =~ s/\x{0153}/oe/g;  ##  œ
-  $intok =~ s/\x{0259}/e/g;  ## ə
-  $intok =~ s/\x{018f}/e/g;  ## Ə
-  $intok =~ s/\x{2019}/'/g;  ## ’
-  $intok =~ s/\x{2026}/.../g;  ## …
-  $intok =~ tr/\x{00d0}\x{0110}\x{00f0}\x{0111}\x{0126}\x{0127}/DDddHh/; # ÐĐðđĦħ
-  $intok =~ tr/\x{0131}\x{0138}\x{013f}\x{0141}\x{0140}\x{0142}/ikLLll/; # ıĸĿŁŀł
-  $intok =~ tr/\x{014a}\x{0149}\x{014b}\x{00d8}\x{00f8}\x{017f}/NnnOos/; # ŊŉŋØøſ
-  $intok =~ tr/\x{00de}\x{0166}\x{00fe}\x{0167}/TTtt/;                   # ÞŦþŧ
-  $intok =~ s/ﾣ//g; # ﾣ
+  # $intok =~ s/\x{e4}/ae/g;  ##  treat characters ä ñ ö ü ÿ
+  # $intok =~ s/\x{f1}/ny/g;  ##  this was wrong in previous version of this doc
+  # $intok =~ s/\x{f6}/oe/g;
+  # $intok =~ s/\x{fc}/ue/g;
+  # $intok =~ s/\x{ff}/yu/g;
+  $intok =~ s/\x{c3}\x{df}/ss/g;  ##  German beta “ß” -> “ss”
+  $intok =~ s/\x{c3}\x{c6}/AE/g;  ##  Æ
+  $intok =~ s/\x{c3}\x{e6}/ae/g;  ##  æ
+  $intok =~ s/\x{c4}\x{B2}/IJ/g;  ##  Ĳ
+  $intok =~ s/\x{c4}\x{B3}/ij/g;  ##  ĳ
+  $intok =~ s/\x{c5}\x{92}/Oe/g;  ##  Œ
+  $intok =~ s/\x{c5}\x{93}/oe/g;  ##  œ
+  $intok =~ s/\x{c9}\x{99}/e/g;  ## ə
+  $intok =~ s/\x{c6}\x{8f}/e/g;  ## Ə
+  $intok =~ s/\x{e2}\x{80}\x{99}/'/g;  ## ’
+  $intok =~ s/\x{e2}\x{80}\x{06}/.../g;  ## …
+  # ÐðđĦħ
+  $intok =~ s/(?:\x{c3}\x{90}|\x{c4}\x{90})/D/g;
+  $intok =~ s/(?:\x{c3}\x{b0}|\x{c4}\x{91})/d/g;
+  $intok =~ s/\x{c4}\x{a6}/H/g;
+  $intok =~ s/\x{c4}\x{a7}/h/g;
+  # ıĸĿŁŀł
+  $intok =~ s/\x{c4}\x{b1}/i/g;
+  $intok =~ s/\x{c4}\x{b8}/k/;
+  $intok =~ s/(?:\x{c4}\x{bf}|\x{c5}\x{81})/L/g;
+  $intok =~ s/(?:\x{c5}\x{80}|\x{c5}\x{82})/l/g;
+  # ŊŉŋØøſ
+  $intok =~ s/\x{c5}\x{8a}/N/g;
+  $intok =~ s/(?:\x{c5}\x{89}|\x{c5}\x{8b})/n/g;
+  $intok =~ s/\x{c3}\x{98}/O/g;
+  $intok =~ s/\x{c3}\x{b8}/o/g;
+  $intok =~ s/\x{c5}\x{bf}/s/g;
+  # ÞŦþŧ
+  $intok =~ s/(?:\x{c3}\x{9e}|\x{c5}\x{a6})/T/g;
+  $intok =~ s/(?:\x{c3}\x{be}|\x{c5}\x{a7})/t/g;
+  # ﾣ
+  $intok =~ s/ﾣ//g;
 
-  
+
   $intok =~ s/\|/ /g;
   $intok =~ s/^\d+([\.:\-\/\\]\d+)+: ?//gm; #skip time stamp at beginning of lines
-  
+
   #Remove HTML tags
   $intok =~ s/( |^)<[^>]+?('s|'| |\n|$)/$1$2/gm;
   $intok =~ s/( |^)([^< ]+?)>( |\n|$)/$1$2$3/gm;
   $intok =~ s/<\/?[^>]+>/ /g;
   $intok =~ s/[<>]{2,}/ /g;
-  
+
   #Space single quotes
   $intok =~ s/(^| )'(.*?[^s])'( |\n|$)/$1 ' $2 ' $3/g;
 
@@ -164,12 +180,12 @@ sub tok {
       while ($str =~ /([0-9]),([0-9]{3})\b/) {
 	  $str = $`.$1.$2.$'; #'
       }
-      
-      
+
+
       #process parentheses ( X )
       # if X contains a number and no letter-> remove
       # if |X| <= 2 -> remove
-      # otherwise, keep it    
+      # otherwise, keep it
       sub proc_par {
 	  my $x = shift;
 	  if ($x =~ /\d/ && $x !~ /\w/) { return ""; }
@@ -178,10 +194,10 @@ sub tok {
       }
       $str =~ s/\(at\)/ @ /g;
       $str =~ s/\(([^\)]+)\)/" ".proc_par($1)." "/ge;
-      
+
       #split items
       $str =~ s/ ?(?:■|•) ?/\n- /g;
-      
+
       #remove long (5+) sequence of single letters and number
       $str =~ s/ (?:(?:[a-zA-Z]|-?[0-9][0-9\.]*) ){5,}/\n/g;
 
@@ -189,8 +205,8 @@ sub tok {
       # joins the address with the following word
       # e.g. www.nodo50.org/mareanegra/ sans oublier
       $str =~ s/(http:\/\/|www\.)(\S+)\/( |$punct1|\.|$quotes|$)/$1$2$3/g;
-      
-      
+
+
 
 
       # put spaces around punctuation marks
@@ -214,16 +230,16 @@ sub tok {
 
       # split numbers around , for lists and years
       # e.g. 8,11,12 et 13 juillet> 8, 11 , 12 et 13 juillet
-      #... JO de 1992,1996 et 2004 ... -> JO de 1992 , 1996 et 2004 
+      #... JO de 1992,1996 et 2004 ... -> JO de 1992 , 1996 et 2004
       $str =~ s/(^|\b)([0-9]+),([0-9]+),([0-9]+)((?:,[0-9]+)*) +(et|ou) ([0-9])/$1.$2." , ".$3." , ".$4.treatLstNb($5)." ".$6." ".$7/ge;
-      $str =~ s/(^|\b)([0-9]+),([0-9]+),([0-9]+)((?:,[0-9]+)*)/$1.$2." , ".$3." , ".$4.treatLstNb($5)/ge;      
+      $str =~ s/(^|\b)([0-9]+),([0-9]+),([0-9]+)((?:,[0-9]+)*)/$1.$2." , ".$3." , ".$4.treatLstNb($5)/ge;
       while($str =~ s/(^|\b)([0-9]+),([0-9]+)(\b|$)/$1.&checkYrs($2,$3).$4/ge) { }
       $str =~ s/¶¶¶/,/g;
 
       # minutes, seconds or inches
       $str =~ s/([0-9]) +(\'|\'\') */$1$2 /g;
       $str =~ s/([0-9]) +(\'|\'\') +([0-9]{1,2})/$1$2$3/g;
-      
+
       # for acronyms with several ., put an extra . at the end of the
       # word if it is the end of a sentence
       $str =~ s/(${upper})\.(${upper})\.(${upper})\. +(${upper})/$1.$2.$3. . $4/g;
@@ -236,8 +252,8 @@ sub tok {
       while ($str =~ s/(http:\/\/|www\.)(\S+) +\/ +(\S)/$1$2\/$3/) { }
       while ($str =~ s/(http:\/\/|www\.)(\S+) +\/(\S)/$1$2\/$3/) { }
       while ($str =~ s/(http:\/\/|www\.)(\S+)\/ +(\S)/$1$2\/$3/) { }
-      
-      
+
+
       # Delete ending "/" and "\"
 #   $str =~ s/(?<!http:\/)[\/\\]( |\n|$)/$1/gim;
       # NB: ? remains with spaces around them for Web adresses but they
@@ -268,37 +284,42 @@ sub tok {
 	      $res .= &treatDot($w)." ";
 	  }
       }
-      
+
 
       $res .= "\n";
   }
-
-  # remove leading and trailing blanks for each line
-  $res =~ s/(^|\n) +/$1/g;
-  $res =~ s/ +($|\n)/$1/g;
-
-  # remove void lines
-  $res =~ s/\n+/\n/g;
-  $res =~ s/^\n+//;
-
-  # keep only 1 consecutive blank
-  $res =~ s/ +/ /g;
-
-  #remove long sequences of numbers
-  #while ($res =~ s/ (-?[^A-Za-z][0-9\.]* )(-?[0-9\.]+ ){2,}(-?[^A-Za-z][0-9\.]*)/\n/g) {}
-  #$res =~ s/[^[:alnum:]\.,;:\?!\-\+\*'"\$£¥%\x{20AC}&#=@°\(\)\/<>²³\n]/ /g;
-  $res =~ s/ \.( \.){2,}/ .../g;
   $res =~ s/ +/ /g;
   $res =~ s/ $//g;
-  $res =~ s/^ //g;	    
-
-  #downcase sequence of 4+ uppercase words
-  $res =~ s/(^| )([A-Z][A-Z0-9'-]*) ((?:[A-Z0-9][A-Z0-9'-]* ?,? ){1,})([A-Z][A-Z0-9'-]+)/$1.ucfirst(lc($2)).lc(" $3 $4")/gem;
-	    
-  $res =~ s/\n\n+/\n/gm;
-  #$res = Encode::encode_utf8($res);
-  
+  $res =~ s/^ //g;
   return $res;
+
+#
+#   # remove leading and trailing blanks for each line
+#   $res =~ s/(^|\n) +/$1/g;
+#   $res =~ s/ +($|\n)/$1/g;
+#
+#   # remove void lines
+#   $res =~ s/\n+/\n/g;
+#   $res =~ s/^\n+//;
+#
+#   # keep only 1 consecutive blank
+#   $res =~ s/ +/ /g;
+#
+#   #remove long sequences of numbers
+#   #while ($res =~ s/ (-?[^A-Za-z][0-9\.]* )(-?[0-9\.]+ ){2,}(-?[^A-Za-z][0-9\.]*)/\n/g) {}
+#   #$res =~ s/[^[:alnum:]\.,;:\?!\-\+\*'"\$£¥%\x{20AC}&#=@°\(\)\/<>²³\n]/ /g;
+#   $res =~ s/ \.( \.){2,}/ .../g;
+#   $res =~ s/ +/ /g;
+#   $res =~ s/ $//g;
+#   $res =~ s/^ //g;
+#
+#   #downcase sequence of 4+ uppercase words
+#   $res =~ s/(^| )([A-Z][A-Z0-9'-]*) ((?:[A-Z0-9][A-Z0-9'-]* ?,? ){1,})([A-Z][A-Z0-9'-]+)/$1.ucfirst(lc($2)).lc(" $3 $4")/gem;
+#
+#   $res =~ s/\n\n+/\n/gm;
+#   #$res = Encode::encode_utf8($res);
+#
+#   return $res;
 }
 
 
@@ -316,7 +337,7 @@ sub checkYrs {
   }
   else {
     return "$a¶¶¶$b"; # to avoid an infinite loop when calling this function
-  } 
+  }
 }
 
 
@@ -341,7 +362,6 @@ sub treatLstNb {
 # - word to process
 sub treatDot {
   my $w = shift;
-  
   # $w is segmented by . except
   # ...
   # in a number
@@ -357,7 +377,7 @@ sub treatDot {
   elsif ($w =~ /(?:${alphanum}*)\.(?:$webdomain)/i) { }
   elsif ($w =~ /[0-9]\.[0-9]/) { }
   elsif (defined $abbr{$w}) {}
-  elsif ($w =~ /(${upper})\.(${upper})\.(${upper})\.?$/o) { 
+  elsif ($w =~ /(${upper})\.(${upper})\.(${upper})\.?$/o) {
     # normalize acronyms with . e.g., O.N.U.=>ONU (at least 3 letters as there can be first names with 2 capital letters, e.g. J.C. Tricher)
     $w =~ s/\.//g;
   }
@@ -365,11 +385,12 @@ sub treatDot {
   elsif ($w =~ /^(${upper})\.$/o) {}
   elsif ($w =~ /^(${upper})\.(${upper})\.$/o) {}
   else {
-    $w =~ s/(${alphanum}*)(\.)(${alphanum}*)/$1 $2 $3/og;
+    $w =~ s/(?!${punct})(\.)(?!${punct})/$1 $2 $3/og;
+    # $w =~ s/(${alphanum}*)(\.)(${alphanum}*)/$1 $2 $3/og;
   }
 
   return $w;
-  
+
 }
 
 1;

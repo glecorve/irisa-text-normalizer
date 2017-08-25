@@ -47,7 +47,7 @@ my $case_sensitivity = 1;
 
 
 
-	
+
 # -------------------------------- #
 # ----- sub reset_token_map() ----- #
 # -------------------------------- #
@@ -103,7 +103,7 @@ sub load_token_map {
 		system("$preprocessing $fn > $tmp_f");
 		$fn = $tmp_f;
 	}
-	
+
     open(F, $fn) or die "cannot open word mapping file $fn";
 
     foreach ( <F> ) {
@@ -122,7 +122,7 @@ sub load_token_map {
 
       if ($_ =~ /^(.*?) => (.*?)(\r|\n|#|$)/) {
 	($w1, $w2) = ($1, $2);
-	
+
 	#       if (grep $_ eq "$1", @{$mapp}) {
 	# 	warn "tokenize::load_token_map() -- multiple mapping rules for $1 (ignoring)\n";
 	#       }
@@ -145,16 +145,16 @@ sub load_token_map {
 	else {
 # 		print "D $w1 -> $w2\n";
 		$all_rules{$w1} = $w2;
-		$$mapp[$i]{original} = $w1;	
+		$$mapp[$i]{original} = $w1;
 		$$mapp[$i]{rewrite} = $w2;
 		$i++;
-		
+
 		#kind of hack for case unsensitivity w/o slowing down the process to much
 		if ($case_sensitivity == 0) {
 			# abc => def -> Abc => Def
 			$w1 =~ s/^(.)/uc($1)/ge;
 			$w2 =~ s/^(.)/uc($1)/ge;
-			$$mapp[$i]{original} = $w1;	
+			$$mapp[$i]{original} = $w1;
 			$$mapp[$i]{rewrite} = $w2;
 			$i++;
 #			print STDERR "$w1 -> $w2\n";
@@ -162,19 +162,19 @@ sub load_token_map {
 			# abc => def -> ABC => DEF
 			$w1 =~ s/^(.*)$/uc($1)/ge;
 			$w2 =~ s/^(.*)$/uc($1)/ge;
-			$$mapp[$i]{original} = $w1;	
+			$$mapp[$i]{original} = $w1;
 			$$mapp[$i]{rewrite} = $w2;
 			$i++;
 #			print STDERR "$w1 -> $w2\n";
 		}
-		
+
 	}
       }
     }
 
     close(F);
   }
-  
+
   if (defined($preprocessing)) {
   	system("rm -f $tmp_f");
   }
@@ -198,15 +198,16 @@ sub map_string {
 	foreach (@_) {
 #	  my $n = @{$_}+0;
 		for my $r (@{$_}) { #foreach rule in the current map
+		# print STDERR $r."\n";
 			if (defined($$p_s)) {
 #					print STDERR "$i / $n\n"; $i++;
-					$$p_s =~ s/(?:^| )\K$r->{original}(?=$END_SEP)/$r->{rewrite}/gm; 
+					$$p_s =~ s/(?:^| )\K$r->{original}(?=$END_SEP)/$r->{rewrite}/gm;
 			}
 		}
 	}
 	return;
 
-}	
+}
 
 # ----------------------------------------- #
 # ----- sub map_string_line_by_line() ----- #
@@ -222,7 +223,7 @@ sub map_string_on_counts {
   foreach (@_) {
    for my $r (@{$_}) { #foreach rule in the current map
 #     print STDERR $i++."\n";
-    $s =~ s/^$r->{original}\t/$r->{rewrite}\t/gm; 
+    $s =~ s/^$r->{original}\t/$r->{rewrite}\t/gm;
    }
   }
 

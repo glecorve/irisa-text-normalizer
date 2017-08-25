@@ -5,7 +5,7 @@
 #
 # July, 2011
 # Gwénolé Lecorvé
-# 
+#
 ########################################################
 
 
@@ -14,6 +14,8 @@ package CorpusNormalisationFr;
 use File::Basename;
 use Cwd 'abs_path';
 use lib dirname( abs_path(__FILE__) )."/.";
+
+use strict;
 
 use capLetter;
 use tokenize;
@@ -73,11 +75,11 @@ my %PLURAL = ();
 my $END_SEP = " |\n|\$|'s? ";
 
 #############################################################################
-	
+
 ##################################################################
 # LOAD SUBROUTINES
 ##################################################################
-	
+
 sub define_rule_preprocessing {
 	tokenize::define_rule_preprocessing(shift(@_));
 }
@@ -93,7 +95,7 @@ sub define_rule_case_unsensitive {
 sub define_rule_case_sensitive {
 	tokenize::define_rule_case_sensitive();
 }
-	
+
 sub load_pos {
 	my $f = shift;
 	open(F, "< $f") or die("Unable to open $f.\n");
@@ -183,15 +185,20 @@ sub load_rules {
 	}
 
 	$maps{$KEY} = \@map;
-	return;	
+	return;
 }
 
 sub apply_rules {
 	my $P_TEXT = shift;
-	my $KEY = shift;
-	
-	tokenize::map_string($P_TEXT, $maps{$KEY});
-	return;       
+	my @rule_files = @_;
+
+  for my $i (0 .. $#rule_files) {
+    if ($maps{$rule_files[$i]} == 0) {
+      load_rules($rule_files[$i], $rule_files[$i]);
+    }
+	   tokenize::map_string($P_TEXT, $maps{$rule_files[$i]});
+   }
+	return;
 }
 
 sub apply_rules_comptes {
@@ -200,13 +207,13 @@ sub apply_rules_comptes {
 
 	my @map;
 	reset_token_map();
-	
+
 	for my $i (0 .. $#rule_files) {
 	tokenize::load_token_map(\@map, $rule_files[$i]);
 	}
-	
+
 	return tokenize::map_string_on_counts($TEXT, \@map);
-	
+
 }
 
 
@@ -225,7 +232,7 @@ sub trim_blanks {
 }
 ##################################################################
 # URLs and email addresses
-##################################################################	
+##################################################################
 
 
 sub url {
@@ -234,8 +241,8 @@ sub url {
 	my @sortie;
 
 	my @tab_lignes = split(/\n/,$$p_entree);
-	
-	
+
+
 
 	foreach my $text (@tab_lignes) {
 		my @nv_ligne = ();
@@ -290,7 +297,7 @@ sub url {
 			$text =~ s/\s+\@\s+/\@/g;
 			$text =~ s/http:\/\/([0-9]*[0-9]) ([0-9]*[0-9]) ([0-9]*[0-9]) ([0-9]*[0-9])/http:\/\/$1\.$2\.$3\.$4/g;
 			$text =~ s/www\.([a-zA-Z]+)\- ([a-zA-Z]+)/www\.$1\-$2/g;
-	
+
 			$text =~ s/\s+/ /g;
 
 #			print STDERR $text."\n";
@@ -312,7 +319,7 @@ sub url {
 					$line[$i] =~ s/~/ tilde /g;
 					$line[$i] =~ s/@/ at /g;
 					$line[$i] =~ s/([0-9]+)/ $1 /g;
-					
+
 					my @lc_line = ();
 					foreach my $w (split(/ +/, $line[$i])) {
 						if (first_letter($w) == 0) {
@@ -322,23 +329,23 @@ sub url {
 							push(@lc_line, $w);
 						}
 					}
-					
+
 					$line[$i] = join(" ", @lc_line);
  					push(@nv_ligne, "<URL>", $line[$i], "</URL>");
 				} else {
 					push(@nv_ligne, $line[$i]);
 				}
 			}
-			push(@sortie, join(" ", @nv_ligne));	
+			push(@sortie, join(" ", @nv_ligne));
 		}
 		else {
 			push(@sortie, "$text");
 		}
 
 	}
-	
+
 	$$p_entree = join("\n", @sortie)."\n";
-	return;	
+	return;
 }
 
 
@@ -348,7 +355,7 @@ sub url {
 
 ##################################################################
 # FIRST LETTERS
-##################################################################	
+##################################################################
 
 
 # return 1 means downcase
@@ -359,15 +366,15 @@ sub process_first_letter {
 	my $retour;
 	my $lcw = downcase($w);
 # 	print "$w/$lcw\n";
-	
+
 	#Extract the prefix/root of the word
 	# Boys' -> Boys
 	# High-performance -> High
 	$w =~ s/^(.*?)-[a-z].*$/$1/;
 	$w =~ s/^(.*')(.*)/$1/;
 	if ($2 ne "") { $x = $2; }
-	
-	if ($w =~ /^[B-Z]$/) {	
+
+	if ($w =~ /^[B-Z]$/) {
 # 	print "A\n";
 		$retour = 0;
 	}
@@ -394,7 +401,7 @@ sub process_first_letter {
 	elsif ($w =~ /[\-A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]{2}/) {
 # 	print "F\n";
 		$retour = 0;
-	}	
+	}
 	elsif ($w =~ /[0-9]/) {
 # 	print "G\n";
 		$retour = 0;
@@ -416,9 +423,9 @@ sub process_first_letter {
 # INPUT: single line text
 sub first_letter_2 {
 	my $phrase = shift;
-	
+
 	my @words = split(/\s/, $phrase);
-	
+
 	my $i;
 	my $retour;
 	my $tail = "";
@@ -469,7 +476,7 @@ sub first_letter {
 
 ##################################################################
 # CURRENCY AND UNITS
-##################################################################	
+##################################################################
 
 
 sub plural {
@@ -478,7 +485,7 @@ sub plural {
 }
 
 
-	
+
 sub expand_unit {
 
 	my $p_hash = shift;
@@ -487,7 +494,7 @@ sub expand_unit {
 	my $inter = shift;
 	my $post = shift; #optional
 	my $exp_u = "";
-	
+
 	if (defined($$p_hash{$u})) {
 		$exp_u = $$p_hash{$u};
 	}
@@ -498,7 +505,7 @@ sub expand_unit {
 				last;
 			}
 		}
-		
+
 	}
 	my $ret = "";
 	my $currency = 0;
@@ -507,7 +514,7 @@ sub expand_unit {
 	# special case since $ is a reg exp symbol
 	if ($u eq '$') {
 		$exp_u = "dollar";
-	}	
+	}
 
 	if ($u !~ /^ *$/) {
 		#force plural
@@ -549,7 +556,7 @@ sub expand_unit {
 sub currencies {
 	my $p_text = shift;
 
-	
+
 
 	load_list(\%CURRENCY, dirname( abs_path(__FILE__) )."/../rsrc/fr/currencies.lst");
 
@@ -587,19 +594,19 @@ sub currencies {
 	$ereg[1] = "(".join("|", @tab1letter).")";
 	my $ereg_all = "(".join("|", keys(%CURRENCY)).")";
 	my $reliable = "(".join("|", @rely).")";
-	
-	
+
+
 	my %special_money = (
 	"m" => "million ",
 	"M" => "milliard ",
 	"" => ""
 	);
-	
+
 	#some special cases
 	# Wrong year: <DATE> 1600 </DATE> EUR -> 1600 EUR
-	$$p_text =~ s/(^| )$YEAR_MARK (\d+) $ereg_all\.?(?='s| |\/|\n|$)/$1 $2 $3/gim;	
-	
-	
+	$$p_text =~ s/(^| )$YEAR_MARK (\d+) $ereg_all\.?(?='s| |\/|\n|$)/$1 $2 $3/gim;
+
+
 foreach my $i (3,2,1) {
 	if ($ereg[$i] ne "()") {
 #		print STDERR "s/(^| |\b)$ereg[$i] ?([0-9]+(?:[\.,\/][0-9\-]+)*) *([bmM]?)n?\.?( |\n|$)/$1$3 $4 $2$5/gm\n";
@@ -607,7 +614,7 @@ foreach my $i (3,2,1) {
 		$$p_text =~ s/(^| |\b)([0-9]+)\.?\- *$ereg[$i]($END_SEP)/"$1$2 $3$4"/giem;
 	}
 }
- 
+
  	foreach my $i (3,2) {
  		if ($ereg[$i] ne "()") {
 	 		$$p_text =~ s/(^|\b)($NUMBER) ?([mM]?) ?$ereg[$i]\.?($END_SEP|\/)/"$1".expand_unit(\%CURRENCY, $2,uc($4),' '.$special_money{$3}).$5/giem;
@@ -616,18 +623,18 @@ foreach my $i (3,2,1) {
 	if ($reliable ne "()") {
 	 	$$p_text =~ s/(^|\b)($NUMBER) ?([mM]?) ?$reliable\.?($END_SEP|\/)/"$1".expand_unit(\%CURRENCY, $2, uc($4),' '.$special_money{$3}).$5/giem;
  	}
-	
+
 	#TAGGING
-	
+
 	$$p_text =~ s/(^| )((?:$NUMBER) (?:milliard |million )?$ereg_expanded_unit)(?=$END_SEP)/$1<CURRENCY> $2 <\/CURRENCY>/gm;
-	
+
 	#/
-	
+
 	$$p_text =~ s/(^| )((?:$LITTERAL_NUMBER) $ereg_expanded_unit)(?=$END_SEP)/$1<CURRENCY> $2 <\/CURRENCY>/gm;
-	
+
 	#/
-	
-	
+
+
 	trim_blanks($p_text);
 	return;
 }
@@ -648,7 +655,7 @@ foreach my $i (3,2,1) {
 sub units {
 	my $p_text = shift;
 	my $NUMBER = "[0-9]+(?:[\.,\/][0-9]+)*";
-	
+
 
 	load_list(\%UNIT, dirname( abs_path(__FILE__) )."/../rsrc/fr/units.lst");
 
@@ -678,7 +685,7 @@ sub units {
 		else {
 			push(@tabexpanded,$UNIT{$u}."s");
 		}
-		
+
 	}
 
 	my @ereg;
@@ -688,34 +695,34 @@ sub units {
 	$ereg[1] = "(".join("|", @tab1letter).")";
 	my $ereg_all = "(".join("|", keys(%UNIT)).")";
 	my $reliable = "(".join("|", @rely).")";
-	
-	
-	
+
+
+
 	# Wrong year: <DATE> 1600 </DATE> km -> 1600 km
-	$$p_text =~ s/(^| )$YEAR_MARK (\d+) $ereg_all\.?(?='s| |\/|\n|$)/$1 $2 $3/gim;	
-	
+	$$p_text =~ s/(^| )$YEAR_MARK (\d+) $ereg_all\.?(?='s| |\/|\n|$)/$1 $2 $3/gim;
+
 	#special cases
 	$$p_text =~ s/(^| |\b)([0-9]+(?:[\.,\/][0-9]+)*) *° ?C($END_SEP)/"$1$2 degree".plural($2)." Celsius$3"/giem;
 
 	$$p_text =~ s/(^| |\b)([0-9]+(?:[\.,\/][0-9]+)*) *fl ?\.? ?oz ?\.?($END_SEP)/"$1$2 fluid ounce".plural($2).$3/giem;
 	$$p_text =~ s/(^| |\b)([0-9]+(?:[\.,\/][0-9]+)*)in\.?($END_SEP)/$1$2 in.$3/gim;
-	
+
 	#"
-	
+
 	$$p_text =~ s/(^| |\b)([0-9]+(?:[\.,\/][0-9]+)*) *° ?F($END_SEP)/"$1$2 degree".plural($2)." Farenheit$3"/gem;
-	
-	
-	
-	
+
+
+
+
 	# floppy disks
 	$$p_text =~ s/(^| |\b)3" *1\/2 /$1."3.5 inches$3"/gem;
 	$$p_text =~ s/(^| |\b)5" *1\/4 /$1."5 inches and a quarter$3"/gem;
-	
+
 	# 1.80 m -> 1 m 80
 	$$p_text =~ s/(^| |\b)(\d+)\.(\d0) ?m\.?($END_SEP)/$1$2 m $3$4/gm;
 	# 1m80 -> 1 m 80
 	$$p_text =~ s/(^| |\b)(\d+)m\.?(\d+)($END_SEP)/$1$2 m $3$4/gm;
-	
+
 
 	# 9x4cm -> 9 x 4 cm
 	foreach my $i (3,2) {
@@ -736,7 +743,7 @@ sub units {
 	                       "cu. " => "cubic",
 	                       "3" => "cubic",
 	                       "³" => "cubic");
-	
+
 	foreach my $i (3,2) {
  		if ($ereg[$i] ne "()") {
 			$$p_text =~ s/(^|\b)($NUMBER) ?$ereg[$i](2|²|3|³)( |\/|\n|$)/"$1$2 ".$square_or_cubic{$4}." $3.$5"/gem;
@@ -748,7 +755,7 @@ sub units {
 
 
 
-	$$p_text =~ s/in\//In\//gm;		
+	$$p_text =~ s/in\//In\//gm;
 	foreach my $i (3,2) {
  		if ($ereg[$i] ne "()") {
 			$$p_text =~ s/(^| |\b)($NUMBER) ?(sq\.? |cu\.? )$ereg[$i]\.?( |\/|\n|$)/"$1$2 ".$square_or_cubic{$3}." $4.$5"/gem;
@@ -769,7 +776,7 @@ sub units {
 			}
 		}
 	}
-	
+
 	foreach my $i (3,2) {
  		if ($ereg[$i] ne "()") {
 			$$p_text =~ s/(^|\b)($NUMBER) ?((?:square |cubic )?)$ereg[$i]\.?( |\/|\n|$)/"$1".expand_unit(\%UNIT, $2,$4,' '.$3).$5/gem;
@@ -778,37 +785,37 @@ sub units {
 	if ($reliable ne "()") {
 		$$p_text =~ s/(^|\b)($NUMBER) ?((?:square |cubic )?)$reliable\.?( |\/|\n|$)/"$1".expand_unit(\%UNIT, $2,$4,' '.$3).$5/gem;
 	}
-	
-	
+
+
 	#separate some other numbers
 	# (except e and è)
 	$$p_text =~ s/(^| |\b)(\d+)([a-dfzàáâãäåçéêëìíîïñòóôõöøùúûüý])($END_SEP)/$1.$2.uc($3).$4/gem;
 	$$p_text =~ s/(^| |\b)(\d+)([a-zàáâãäåçèéêëìíîïñòóôõöøùúûüý]{4,})/$1$2 $3/gm;
 	$$p_text =~ s/(^| |\b)(\d+)([A-Z][a-zàáâãäåçèéêëìíîïñòóôõöøùúûüý]{3,})/$1$2 $3/gm;
-	
+
 	trim_blanks($p_text);
-	
+
 
 	#TAGGING
-	
+
 	$$p_text =~ s/(^| )((?:(?:$NUMBER [xX] )?$NUMBER) (?:square |cubic )?$ereg_expanded_unit(?: per (?:square |cubic )?$ereg_expanded_unit)?)(?=$END_SEP)/$1<QUANTITY> $2 <\/QUANTITY>/gm;
-	
+
 	#/
-	
+
 	$$p_text =~ s/(^| )($NUMBER)-($ereg_expanded_unit)(?=$END_SEP)/$1<QUANTITY> $2 $3 <\/QUANTITY>/gm;
 	#/
-	
+
 	$$p_text =~ s/(^| )((?:$LITTERAL_NUMBER) (?:square |cubic )?$ereg_expanded_unit(?: per (?:square |cubic )?$ereg_expanded_unit)?)(?=$END_SEP)/$1<QUANTITY> $2 <\/QUANTITY>/gm;
-	
+
 	#/
-	
+
 	#merge consecutive tags (eg, no punc in between)
 	$$p_text =~ s/ <\/QUANTITY> <QUANTITY> / /g;
-	
+
 	$$p_text =~ s/([^<])\// /g;
 	trim_blanks($p_text);
 	return;
-	
+
 }
 
 
@@ -888,15 +895,15 @@ sub expand_ad_bc {
 
 sub rewrite_date {
         my ( $month, $day, $year , $bcad ) = @_;
-        
+
         if ($year 	< 10) {
                 $year = "20" . $year;
         }
-        
+
         if ($year < 100) {
                 $year = "19" . $year;
         }
-        
+
         $day = number_to_fr ( $day );
         $year = year2text( $year );
         $month = months2text ( $month );
@@ -905,12 +912,12 @@ sub rewrite_date {
 		if ($day ne "") {
 			$ret = $day . " " . $month . " " . $year;
 		}
-		else { 
+		else {
 				$ret = $month . " " . $year;
 		}
-		
+
 		$bcad = expand_ad_bc($bcad);
-		
+
 		return " <DATE> $ret $bcad <\/DATE> ";
 }
 
@@ -936,7 +943,7 @@ sub rewrite_time {
 
         if ($minute == 0 && $second == 0 && $hour == 12) {
                 if ($ampm ne "") {
-                        if (uc $ampm eq "PM") {     
+                        if (uc $ampm eq "PM") {
 							$ret = "midi";
                         } elsif (uc $ampm eq "AM") {
                             $ret = "minuit";
@@ -957,7 +964,7 @@ sub rewrite_time {
 		    if ($second != 0) {
 		            my $second_str = number_to_fr ( $second );
 		    }
-		    
+
 			#prefixed version
 			if (rand() < 0.5) {
 				if ($minute == 30) {
@@ -980,9 +987,9 @@ sub rewrite_time {
 			else {
 				$ret = "$hour_str  heure".plural($hour)." ".number_to_fr($minute);
 			}
-		    
+
 		#AM/PM
-		    
+
 		    my $ampm_str = "";
 		    if ($ampm ne "") {
 			if (uc $ampm eq "PM") {
@@ -1005,7 +1012,7 @@ sub rewrite_time {
 			$ret .= $ampm_str;
 		}
 		}
-        
+
         return "<TIME> $ret <\/TIME>";
 }
 
@@ -1014,7 +1021,7 @@ sub rewrite_time {
 sub date_and_time {
 
 	my $p_text = shift;
-	
+
 	my $DURATION_SPACE = "XYXDURATIONSPACEXYX";
 
 	sub rewrite_duration {
@@ -1048,31 +1055,31 @@ sub date_and_time {
 	$$p_text =~ s/(^| )$DATE_PREFIX $MONTH (?:, )?(\d{3,4})($END_SEP)/"$1 $2 <DATE> $3 ".year2text($4)." <\/DATE>$5"/eigmo;
 	$$p_text =~ s/(^| )$MONTH ?(?:, )?0?(1|2|3|4|5|6|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31) (?:, )?(\d{3,4})(?=$END_SEP)/"$1 ".rewrite_date($2, $3, $4)/eigmo;
 	$$p_text =~ s/(^| )$DATE_PREFIX +([12][0-7]\d{2})($END_SEP)/"$1 $2 <DATE> ".year2text($3)." <\/DATE>$4"/eigmo;
-	
+
 	$$p_text =~ s/(^| )(depuis|avant|après|jusqu'à|vers|de|à) (midnight|noon)($END_SEP)/"$1 $2 <TIME> $3 <\/TIME> $4"/eigm;
 # 	$$p_text =~ s/(^| )(depuis|avant|après|jusqu'à|vers|de|à) ($LITTERAL_SMALL_NUMBER) (du matin|de l'après-midi|du soir|de la nuit)($END_SEP)/"$1 $2 <TIME> $3 $4 <\/TIME> $5"/eigm;
-	
+
 	#"
     # Date
 
 
 	$$p_text =~ s/(^| )((?:[0-3]?[1-9]|10|20|30)?) ?( ?[\.\-\/\s] ?) ?$MONTH ?\3 ?([12]?[0-9]?[0-9]{2})($END_SEP)/$1.rewrite_date($4, $2, $5)." ".$6/giem;
-                                      
-                                      
+
+
 	#separator is ., - or /
  	$$p_text =~ s/(^| )(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12)( ?[\.\-\/] ?)((?:[0-3]?[1-9]|10|20|30)?)\3([12]?[0-9]?[0-9]{2})($END_SEP)/$1.rewrite_date($2, $4, $5)." ".$6/eigm;
- 	
+
  	$$p_text =~ s/(^| )([0-3]?[1-9]|10|20|30) ?( ?[\.\-\/] ?) ?(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|0?10|11|12) ?\3 ?([12]?[0-9]?[0-9]{2})($END_SEP)/$1.rewrite_date($4, $2, $5)." ".$6/giem;
- 	
+
 	#separator is space (limitation on years)
  	$$p_text =~ s/(^| )(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12)( +)((?:[0-3]?[1-9]|10|20|30)?)\3(20\d{2}|1[6-9]\d{2})($END_SEP)/$1.rewrite_date($2, $4, $5)." ".$6/eigm;
- 	
+
  	$$p_text =~ s/(^| )([0-3]?[1-9]|10|20|30)( +)(0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|0?10|11|12)\3(20\d{2}|1[6-9]\d{2})($END_SEP)/$1.rewrite_date($4, $2, $5)." ".$6/giem;
 
-	### 	
- 	
+	###
+
  	$$p_text =~ s/(^| )((?:18|19|20)\d\d) ?- ?((?:18|19|20)\d\d)($END_SEP)/$1.rewrite_date("", "", $2, "")." ".rewrite_date("", "", $3, "").$4/gem;
- 	
+
  	$$p_text =~ s/(^| )([1-9][0-9]{1,3})(A\.?D\.?|B\.?C\.?)/"$1".rewrite_date("", "", $2,$3)." "/giem;
 
 
@@ -1090,19 +1097,19 @@ sub date_and_time {
 	$$p_text =~ s/<\/DATE> -([a-z]+)($END_SEP)/<\/DATE> jusqu'à $1$2/igmo;
 	$$p_text =~ s/<\/DATE> - <DATE>/<\/DATE> à <DATE>/igm;
 
-	
+
 	#"
 	#Time
-	
+
 	$$p_text =~ s/(^| )(0?0|0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24)(\.| *: *|)((?:[0-5][0-9])?) ?(A\.?M\.?|P\.?M\.?)-(0?0|0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24)(\.| *: *|)((?:[0-5][0-9])?) ?(A\.?M\.?|P\.?M\.?)($END_SEP)/"$1$2$3$4 $5 à $6$7$8 $9$10"/iegm;
 
-	
+
 	$$p_text =~ s/(^| )(0?0|0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24)(?:\.| *: *)([0-5][0-9])(?:(?:\.| *: *)]([0-5][0-9]))?\s?([AEP])\.?([TM])\.?($END_SEP)/$1." ".sprintf('%s', rewrite_time($2, $3, $4, $5.$6))." ".$7/iegm;
-	
+
 	$$p_text =~ s/(^| )(0?0|0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24)((?:[0-5][0-9])?) ?(A\.?M\.?|P\.?M\.?)($END_SEP)/$1.sprintf('%s', rewrite_time($2, $3, 0, $4))." ".$5/iegm;
-	
+
 	$$p_text =~ s/(^| )(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24)(?:\.| *: *)([0-5][05])($END_SEP)/$1." ".sprintf('%s', rewrite_time($2, $3, 0, $4))." ".$5/iegm;
-	
+
 #	$$p_text =~ s/(^| )07H30($END_SEP)/$1."toto".$6/iegm;
 
 
@@ -1112,7 +1119,7 @@ sub date_and_time {
 	my $m = '(?:minutes?|min \.?|min\.?|mn ?\.?|mn\.?|\')';
 	my $s = '(?:secondes?|sec\ \.?|sec\.?|s\ \.?|s\.?|\'\')';
 	my $ms = '(?:millisecondes?|ms\ ?\.?)';
-	
+
 	#Special duration
  	# Ad Bh (Cmin Ds Ems)?
     	$$p_text =~ s/(^|\ |\b)
@@ -1124,8 +1131,8 @@ sub date_and_time {
      	              )?
      	              (?=\ |\/|\n|$)
      	              /$1.rewrite_duration($2,$3,$4,$5,$6)/gemx;
- 	              
- 
+
+
 	# Bh Cmin (Ds Ems)?
     	$$p_text =~ s/(^|\ |\b)
     	              (\d+)\ ?$h\ ?(\d+)\ ?$m
@@ -1141,22 +1148,22 @@ sub date_and_time {
                         (?:\ ?(\d+\.?\d*)\ ?$ms)?
    	              (?=\ |\n|$)
    	              /$1.rewrite_duration(0,0,$2,$3,$4)/gemx;
- 	
+
   	# Ds Ems
     	$$p_text =~ s/(^|\ |\b)
     	              (\d+\.?\d*)\ ?$s\ ?(\d+\.?\d*)\ ?$ms
     	              (?= |\/|\n|$)
     	              /$1.rewrite_duration(0,0,0,$2,$3)/gemx;
-	
+
 
 	#Remaining XXhXX
 	$$p_text =~ s/(^| )(0?0|0?1|0?2|0?3|0?4|0?5|0?6|0?7|0?8|0?9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24) *H *((?:[0-5][0-9])?) ?((?:AM|A\.?M\.?|PM|P\.?M\.?)?)($END_SEP)/$1.sprintf('%s', rewrite_time($2, $3, 0, $4))." ".$5/iegm;
 
 
 	$$p_text =~ s/$DURATION_SPACE/ /g;
-	
+
 	trim_blanks($p_text);
-	
+
 	return;
 
 }
@@ -1186,7 +1193,7 @@ sub rom2dec {
 	if (($forced == 1)
 	||  ($tmp !~ /^(E|K|L|M|I|C|X|V|D|XXX)$/ && !($tmp =~ /I{4}/ || $tmp =~ /V{4}/ || $tmp =~ /X{4}/ || $tmp =~ /L{4}/ || $tmp =~ /C{4}/ || $tmp =~ /D{4}/ || $tmp =~ /M{4}/))
 	) {
-	
+
 		$valeurs{"I"} = 1;
 		$valeurs{"U"} = 4;
 		$valeurs{"V"} = 5;
@@ -1200,7 +1207,7 @@ sub rom2dec {
 		$valeurs{"D"} = 500;
 		$valeurs{"O"} = 900;
 		$valeurs{"M"} = 1000;
-		
+
 		while ($tmp =~ /^(.)(.)(.*)$/) {
 			if (defined($valeurs{$1.$2})) {
 				$sortie += $valeurs{$1.$2};
@@ -1219,7 +1226,7 @@ sub rom2dec {
 	else {
 		return $rom;
 	}
-	
+
 }
 
 sub ordinal_rom2dec {
@@ -1282,13 +1289,13 @@ sub roman_numbers {
 
 	#Except I, V, X (too may false hits) -> handled in rom2dec
 	$$P_TEXT =~ s/ROMAN_CARDINAL ([IVXLCDM]+)/" ".rom2dec($1)." "/gem;
-	
+
 	# <PERSON> Henry </PERSON> I -> <PERSON> Henry I </PERSON>
 	$$P_TEXT =~ s/(^| |\-)([A-Z][a-z]{2,}) <\/PERSON> ([IV]+(?:'s)?)(?= |\n|$)/$1$2 $3 <\/PERSON>/gm;
 	#/
-	
+
 	$$P_TEXT =~ s/(^| )<PERSON> ([A-Z][a-z]{2,}(?: [A-Z][a-z]{2,})?) ([IV]+)('s|\. <| <)/$1."<PERSON> $2 ".ordinal_rom2dec($3,1).$4/gem;
-	
+
 	$$P_TEXT =~ s/(^|\b)([A-Z][a-z]{2,}) ([IVXLCDM]+)(?='s| |$)/$1.$2." ".ordinal_rom2dec($3)/gem;
 
 	#A I B
@@ -1296,15 +1303,15 @@ sub roman_numbers {
 
 	#A I b
 	$$P_TEXT =~ s/(^|\b)([A-Z][a-z]{2,}) I ([a-z]+)(?='s| |$)/$1.$2." ".process_AIb($2)." $3"/gem;
-	
+
 	#A I. ...
 	$$P_TEXT =~ s/(^|\b)([A-Z][a-z]{2,}) I( ?\.)(?= |\n|$)/$1.$2." ".process_AInothing($2)."$3"/gem;
-	
+
 	#A I
 	$$P_TEXT =~ s/(^|\b)([A-Z][a-z]{2,}) I(?=\n|$)/$1.$2." ".process_AInothing($2)/gem;
 
 	$$P_TEXT =~ s/<ORGANIZATION> ([IVXLCDM]{3,})(\.| )/<ORGANIZATION> _$1_$2/gm;
-	
+
 	$$P_TEXT =~ s/^([IVXLCDM]{1,})(\.| |$)/rom2dec($2).$3/gem;
 	$$P_TEXT =~ s/(^| )([IVXLCDM]{3,})(\.| |$)/$1.rom2dec($2).$3/gem;
 	$$P_TEXT =~ s/<ORGANIZATION> _([IVXLCDM]{3,})_(\.| )/<ORGANIZATION> $1$2/gm;
@@ -1364,32 +1371,32 @@ sub telephone {
 sub numbers {
 	my $P_TEXT = shift;
 
-	
+
 	# #3 -> number 3
 #	$$P_TEXT =~ s/ #(\d+)( |\b|$)/ number $1$2/gm;
-	
-	
+
+
 	# all remaining round years (all 18xx, 19xx, 20xx)
 	$$P_TEXT =~ s/$YEAR_MARK ((?:16|17|18|19|20)\d{2})(?=$END_SEP|-)/"<DATE> ".year2text($1)." <\/DATE> "/eigmo;
 	#"
-	
+
 #	$$P_TEXT =~ s/<DATE> +<DATE>/<DATE>/g;
 #	$$P_TEXT =~ s/<\/DATE> +<\/DATE>/<\/DATE>/g;
 	#"
-	
-	#year 20XX
-	$$P_TEXT =~ s/(^| |\b)$DATE_PREFIX (20\d\d)($END_SEP)/$1.$2." ".rewrite_date("","",$3).$4/giem;   
-	$$P_TEXT =~ s/(^| |\b)$DATE_PREFIX (1[3-9])(\d\d)($END_SEP)/$1.$2." ".rewrite_date("","",$3.$4).$5/giem;  
-	
 
-	
+	#year 20XX
+	$$P_TEXT =~ s/(^| |\b)$DATE_PREFIX (20\d\d)($END_SEP)/$1.$2." ".rewrite_date("","",$3).$4/giem;
+	$$P_TEXT =~ s/(^| |\b)$DATE_PREFIX (1[3-9])(\d\d)($END_SEP)/$1.$2." ".rewrite_date("","",$3.$4).$5/giem;
+
+
+
 	#cut sequences like "40,000pages" -> "40,000 page"
 #	$$P_TEXT =~ s/(\d(?:[ ,\.](?:\d+))+)([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝa-zàáâãäåçèéêëìíîïñòóôõöøùúûüý])/$1 $2/gm;
 	#group "40,123" -> "40123"
 	$$P_TEXT =~ s/(\d),(\d{3})(?= |$)/$1$2/gm;
-	
+
 	$$P_TEXT =~ s/(\d+)(st|nd|rd|th)?$MONTH/$1$2 $3/gmo;
-	
+
 	$$P_TEXT =~ s/(^| )-(\d)/$1 moins $2/gm;
 	$$P_TEXT =~ s/\+ ?(\d)/ plus $1/gm;
 
@@ -1403,8 +1410,8 @@ sub numbers {
 	$$P_TEXT =~ s/ > (\d+)/ est supérieur à $1/gm;
 	$$P_TEXT =~ s/ >(\d+)/ supérieur à $1/gm;
 	$$P_TEXT =~ s/=+/ égale /gm;
-	
-	
+
+
 	$$P_TEXT =~ s/(^|\b)1\/2(\b|$)/$1."un demi".$2/gem;
 	$$P_TEXT =~ s/(^|\b)(1|2)\/3(\b|$)/$1.number_to_fr($2)." tiers".$3/gem;
 	$$P_TEXT =~ s/(^|\b)1\/4(\b|$)/$1."un quart".$3/gem;
@@ -1417,7 +1424,7 @@ sub numbers {
 # 		$x =~ s/e$//;
 # 		return $x;
 # 	}
-# 
+#
 # 	$$P_TEXT =~ s/(^|\b)(\d{1,2})(ers?)(\b|$)/$1.process_er(number_to_fr($2)).$3.$4/gem;
 
 	$$P_TEXT =~ s/(^|\b)[I] ?st(\b|$)/$1."premier".$2/gem;
@@ -1426,23 +1433,23 @@ sub numbers {
 	$$P_TEXT =~ s/(^|\b)2 ?n?d(s?)(\b|$)/$1."second".$2.$3/gem;
 	$$P_TEXT =~ s/(^|\b)2 ?(?:nde|de)(s?)(\b|$)/$1."seconde".$2.$3/gem;
 	$$P_TEXT =~ s/(^|\b)(\d+) ?-?(?:i?(?:è|e)(?:me)?)(s?)(\b|$)/$1.ordinate_to_fr($2).$3.$4/gem;
-	
+
 
 	$$P_TEXT =~ s/(^|\b)([0-9]+) *\/ *([1-9][0-9])(\b|$)/$1.number_to_fr($2)." ".ordinate_to_fr($3).plural($2).$4/gem;
 	$$P_TEXT =~ s/(^|\b)((?:[0-9]+)(?:[\.,][0-9]+)*) *\/ *((?:[0-9]+)(?:[\.,][0-9]+)*)(\b|$)/$1.number_to_fr($2)." sur ".number_to_fr($3).$4/gem;
-	
-	
+
+
 	sub seq_points {
 		my $w = shift;
 		$w =~ s/\./ /g;
 		return $w;
 	}
 	$$P_TEXT =~ s/(^| )((?:\d+\.){2,})(?=\d| |$)/$1.seq_points($2)/gem;
-	
+
 	$$P_TEXT =~ s/(^| )(\d+(?:[\.,]\d+)*)(-| |$)/$1.number_to_fr($2).$3/gem;
 	$$P_TEXT =~ s/(^| )(\d+(?:[\.,]\d+)*)\.([A-Za-z]+) /$1.number_to_fr($2)." . ".first_letter_2($3)." "/gem;
-	return;	
-	
+	return;
+
 	trim_blanks($P_TEXT);
 
 }
@@ -1462,7 +1469,7 @@ sub complex_abbreviations {
 
 ##################################################################
 # ACRONYMS
-##################################################################	
+##################################################################
 
 
 # DAF-3 -> D.A.F-3
@@ -1470,7 +1477,7 @@ sub acronyms {
 	my $p_text = shift;
  	my $CHEM = 'Al|Br|Cd|Cl|Ca|C|Cu|Co|He|H|Fe|Pb|Li|Mg|Hg|Ni|N|Pt|Pu|K|Ra|Si|Na|Ag|S|Ti|W|U|Xe';
  	$CHEM = join("|", sort {length($b) <=> length($a)} split(/\|/ , $CHEM));
-	
+
 	# A-F-D -> A.F.D.
 	# A. F. D. -> A.F.D.
 	# A.F.D. -> A.F.D. (no change)
@@ -1480,7 +1487,7 @@ sub acronyms {
 		$acr =~ s/([A-Z])$/$1./g;
 		return $acr;
 	}
-	
+
 	# AFD -> A.F.D
 	# FA-18 -> F.A.-18
 	# WORD -> Word (since word is in the English lexicon) /!\ only if the |word| > 3
@@ -1511,7 +1518,7 @@ sub acronyms {
 		}
 		return join('-',@out);
 	}
-	
+
  	#ITunes -> I.Tunes
  	#JCDecaux -> J.C.Decaux
 	sub explode_partial_acronym {
@@ -1567,16 +1574,16 @@ sub acronyms {
 	#bTV -> B.TV
 	#x3 -> X.3
 	$$p_text =~ s/(^| |\b)([a-z])([A-Z0-9])/$1.uc($2).".$3"/gem;
-	
+
 
 	#Separating acronyms "AFD-CAN" => "AFD CAN"
 	$$p_text =~ s/(^| |\b)([A-Z]{2,}(?:-[A-Z]{2,})+)($END_SEP|s )/$1.separate_acronyms($2).$3/gem;
 
-	
+
  	#join letter whitin acronyms
  	$$p_text =~ s/(^| |\b)([A-Z0-9]\. ?[A-Z0-9](?:\. ?[A-Z0-9])+)(\.?)(?=$END_SEP|s )/$1.join_acronym($2.$3)/gem;
  	$$p_text =~ s/(^| |\b)([A-Z0-9]-[A-Z0-9](?:-[A-Z0-9])+)(?=$END_SEP|s )/$1.join_acronym($2)/gem;
- 	
+
  	sub except_interjection {
  		my $x = shift;
  		if ($x =~ /^(hm+|brr+|grr+|shh+)$/) {
@@ -1584,55 +1591,55 @@ sub acronyms {
  		}
  		else { return uc($x); }
  	}
- 	
+
  	#Uppercase unpronouncable lowercased sequence
  	$$p_text =~ s/(^| |-)([bcdfghjklmnpqrstvwxz]{2,})(?=$END_SEP|s )/$1.except_interjection($2)/gem;
 
 # 	#in order to re-explode them
  	$$p_text =~ s/(^| |\b)([A-Z0-9&]{2}(?:[\-&]?[A-Z0-9]+)*)(?=$END_SEP|-|s'?(?: |\n|$))/$1.explode_acronym($2)/gem;
- 	
+
  	#a&r -> A&R
  	$$p_text =~ s/(^| |-)([a-z])&([a-z])(?=$END_SEP|s )/$1.uc($2).".&".uc($3)."."/gem;
- 	
+
  	# (some) Chemicals
  	# NaCl3O2 -> Na.Cl.3O.2
  	$$p_text =~ s/(^| )((?:(?:$CHEM)[1-9]?){2,})(?=$END_SEP|-|s )/$1.explode_chemicals($2)/gem;
- 	
+
  	#ITunes -> I.Tunes
  	#JCDecaux -> J.C.Decaux
  	#XYz -> X.Yz unless XYz (or a case variant) is in the lexicon
  	$$p_text =~ s/(^| |-)([A-Z][A-Z]+[a-z]+)(?=$END_SEP|-)/$1.explode_partial_acronym($2)/gem;
-	
+
  	# A-Team -> A.-Team
  	$$p_text =~ s/(^| )([A-Z])-/$1$2.-/gm;
- 	
+
  	# X -> X. (including X's -> X.'s)
  	# except A and I
  	$$p_text =~ s/(^| )([B-HJ-Z])(?=$END_SEP)/$1$2./gm;
  	$$p_text =~ s/(^| )([B-HJ-Z])'S(?= |\n|$)/$1$2.'s/gm;
  	$$p_text =~ s/(^| )([AI])'[sS]/$1$2.'s/gm;
- 	
+
  	# X.Y -> X.Y.
  	$$p_text =~ s/([A-Z]\.[A-Z])(?=$END_SEP)/$1./gm;
- 
+
  	# the X.'s -> the X.s
  	$$p_text =~ s/(^| )([a-z]+) ([A-Z]\.)'s(?=$END_SEP)/$1$2 $3s/gm;
- 	
+
  	# A's -> A.'s
  	$$p_text =~ s/(^| )(A)'s(?=$END_SEP)/$1$2.'s/gm;
 
- 	
+
  	# Xs -> X.s
  	# except As, Es, Is, Os, Us
  	$$p_text =~ s/(^| )([B-DF-HJ-NP-TVZ])s(?=$END_SEP)/$1$2.s/gm;
- 	
+
 # 	# Z.Y.X.s -> Z.Y.X.s
 # 	$$p_text =~ s/([A-Z]\.)s(?=$END_SEP)/$1s/gm;
- 	
+
  	$$p_text =~ s/([A-Z0-9])\. '/$1.'/gm;
- 	
+
 	trim_blanks($p_text);
-	
+
 }
 
 
@@ -1640,16 +1647,16 @@ sub acronyms {
 
 ##################################################################
 # HYPHENATION
-##################################################################	
+##################################################################
 
 
 
 sub hyphenate {
 	my $p_text = shift;
 	our $DASH_SYM = "XYZDASHZYX";
-	
-	$$p_text =~ s/(^| )-([^ \d]+?)(?=$| |\n)/$1 $2/g; #no dash at the beginning of a word before hyphenation
-	
+
+	# $$p_text =~ s/(^| )-([^ \d]+?)(?=$| |\n)/$1 $2/g; #no dash at the beginning of a word before hyphenation
+
 	sub suffixation {
 		my $a = shift;
 		my $b = shift;
@@ -1661,9 +1668,10 @@ sub hyphenate {
 			return $c;
 		}
 	}
+
 	#dans les rares cas où ce n'est pas déjà fait
 	$$p_text =~ s/(^| )([^ ]+?)(-t-elles?|-t-ils?|-t-on|-t-en|-ce|-elles?|-ils?|-je|-la|-les?|-leur|-lui|-mêmes?|-m\'|-moi|-nous|-on|-toi|-tu|-t\'|-vous|-en|-y|-ci|-là)( |$)/$1.suffixation($2,$3).$4/gem;
-	
+
 	sub de_suffixation {
 		my $a = shift;
 		my $b = shift;
@@ -1676,7 +1684,7 @@ sub hyphenate {
 		}
 	}
 	$$p_text =~ s/ -([^ \d]+?)(?=$| |\n)/" ".de_suffixation("-",$1)/ge; #pas de tiret qui débute un mot en minuscule sauf -t-il, -t-elle ...
-	
+
 	$$p_text =~ s/--+/ - /g;
 	$$p_text =~ s/ +- +/ /g;
 	$$p_text =~ s/^- +/ /g;
@@ -1685,30 +1693,30 @@ sub hyphenate {
 sub dash_cut_or_not {
 		my $w = shift;
 		our $DASH_SYM;
-		
+
 		# if bracketed by dashes, remove
 		if ($w =~ /^-.*-$/) {
 			return $w;
 		}
-		
+
 		# if proper name, keep it (Abla-Bla or Ad-777 but not Asp-irine)
 		elsif ($w =~ /^[A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]\.?.*-[A-Z09]/) {
 			$w =~ s/-/$DASH_SYM/g;
 			return $w;
 		}
-		
+
 		# if in-vocabulary (common noun) word keep it
 		elsif (defined($lexicon{$w})) {
 			$w =~ s/-/$DASH_SYM/g;
 			return $w;
 		}
-		
+
 		# if split word, eg, exam-ple, remove dash
 		elsif ($w =~ /^((?:.+-)*)(.+?)-(.+?)(?:'s?)?$/ && (defined($lexicon{$2.$3}) || defined($lexicon{lc($2.$3)}))
 		) {
 			$w = $1.$2.$3;
 		}
-		
+
 		# suffixes ...
 		if ($w !~ /^-[^-]+$/ && $w !~ /^[^-]+-$/) {
 			my @tab = split(/-/,$w);
@@ -1718,12 +1726,12 @@ sub dash_cut_or_not {
 			@tab = split(/-/,$1);
 			$w = join(" ", map {dash_cut_or_not($_."-")} @tab)." ".$2;
 		}
-		
+
 		return $w;
 	}
-	
+
 	#no dash at the beginning of a word
-#	$$p_text =~ s/(^| |\n)-([A-Za-z])/$1$2/gm;	
+#	$$p_text =~ s/(^| |\n)-([A-Za-z])/$1$2/gm;
 	#process when dash is in the middle of a word
 	$$p_text =~ s/(^| |\n)([^ \n]+)((?:-[^ \n]+)+)(?=$| |\n)/$1.dash_cut_or_not($2.$3)/gem;
 	#no dash at the end of proper names
@@ -1742,7 +1750,7 @@ sub dash_cut_or_not {
         $$p_text =~ s/(\w)- -(\w)/$1 -$2/g;
 
 	trim_blanks($p_text);
-	
+
 }
 
 
@@ -1761,10 +1769,10 @@ sub split_entities {
 		}
 		close(F);
 	}
-	
+
 
 	my $big_ER = join("|", keys(%liste));
-	
+
 	$$p_text =~ s/(^| )($big_ER)(?: ?- ?($big_ER))(?=$END_SEP)/$1$2 $3/g;
 	return;
 }
@@ -1775,16 +1783,16 @@ sub split_entities {
 
 ##################################################################
 # APOSTROPHES
-##################################################################	
+##################################################################
 
 sub apostrophes {
     my $p_text = shift;
-    
+
     $$p_text =~ s/ +'/'/g;
     $$p_text =~ s/(^| )([dcjlmnstDCJLMNST]|[Qq]u|[Jj]usqu|[Ll]orsqu|[Pp]uisqu|[[Pp]resqu|[Qq]uelqu|[Qq]uoiqu) '/$1$2' /gm;
     $$p_text =~ s/(^| )([dcjlmnstDCJLMNST]|[Qq]u|[Jj]usqu|[Ll]orsqu|[Pp]uisqu|[[Pp]resqu|[Qq]uelqu|[Qq]uoiqu)'([AEIOUYÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝaeiouyàáâãäåèéêëìíîïòóôõöøùúûüýÿ])/$1$2' $3/gm;
     $$p_text =~ s/(^| )([MNST])' ([BCDFGHJKLMNPQRSTVWXZ])/$1$2'$3/gm;
-    
+
     sub apo_couper_ou_pas {
 	my $w = shift;
 	if ($w !~ /^'/ && $w =~ /'/) {
@@ -1812,37 +1820,37 @@ sub apostrophes {
 # sub apostrophes {
 # 	my $p_text = shift;
 # 	our $APO_SYM = "XXXAPOSTROPHEXXX";
-# 	$$p_text =~ s/([A-Za-z0-9])' s(\b)/$1's$2/g;	
+# 	$$p_text =~ s/([A-Za-z0-9])' s(\b)/$1's$2/g;
 # 	$$p_text =~ s/([A-Za-z0-9]) 's(\b)/$1's$2/g;
 
 # 	# ' <LOCATION> Dummy City </LOCATION> '
 # 	#      -> <LOCATION> 'Dummy City' </LOCATION> streets
 # 	$$p_text =~ s/(^| )' (<([A-Z]+)>) (.+) (<\/\3>) '($END_SEP)/$1$2 $4 $5 $6/gm;
-	
+
 # 	# <LOCATION> London </LOCATION> 's streets
 # 	#      -> <LOCATION> London's </LOCATION> streets
 # 	# but this can be broken by the specific normalisation
 # 	$$p_text =~ s/ (<\/[A-Z]+>) +'([a-z]{1,2})($END_SEP)/'$2 $1$3/gm;
 # 	$$p_text =~ s/ (<\/[A-Z]+>) +'( |$|\n)/' $1$2/gm;
 
-	
+
 # 	$$p_text =~ s/ 's(\b)/ ${APO_SYM}s$2/g;
 # 	$$p_text =~ s/(^| )'(.+)'($END_SEP)/$1$2$3/gm;
 # 	$$p_text =~ s/(^| )'(.+)'($END_SEP)/$1$2$3/gm;
 # 	$$p_text =~ s/ '(d|ve|re|ll|s)($END_SEP)/ ${APO_SYM}$1$2/gm;
 # 	$$p_text =~ s/(^| )(?:(l|d|qu)'(une?))($END_SEP)/$1$2${APO_SYM}$3$4/gm;
-	
+
 # 	$$p_text =~ s/ +'/'/g;
 # 	$$p_text =~ s/(^| )([dcjlmnstDCJLMNST]|[Qq]u|[Jj]usqu|[Ll]orsqu|[Pp]uisqu|[[Pp]resqu|[Qq]uelqu|[Qq]uoiqu) '/$1$2' /gm;
 # 	$$p_text =~ s/(^| )([dcjlmnstDCJLMNST]|[Qq]u|[Jj]usqu|[Ll]orsqu|[Pp]uisqu|[[Pp]resqu|[Qq]uelqu|[Qq]uoiqu)'([AEIOUYÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝaeiouyàáâãäåèéêëìíîïòóôõöøùúûüýÿ])/$1$2' $3/gm;
 # 	$$p_text =~ s/(^| )([MNST])' ([BCDFGHJKLMNPQRSTVWXZ])/$1$2'$3/gm;
-	
-	
+
+
 # 	sub apo_cut_or_not {
 # 		my $w = shift;
 # 		our $APO_SYM;
 # # 		print STDERR "$w\n";
-		
+
 # 		#si proper name, keep it
 # 		if ($w =~ /^[A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]/) {
 # 			$w =~ s/'/$APO_SYM/g;
@@ -1882,11 +1890,11 @@ sub apostrophes {
 # 	$$p_text =~ s/(^| |\n)([^^ \n]+)('[^ \n]*)+/$1.apo_cut_or_not($2.$3)/gem;
 # 	$$p_text =~ s/'/ /gm; #replace remaining apostrophes with blanks
 # 	$$p_text =~ s/$APO_SYM/'/gm; #back to normal apostrophes
-	
+
 # 	$$p_text =~ s/(^| )(he|she) '(d|ll|s)($END_SEP)/$1$2'$3$4/gm; #he/she
 # 	$$p_text =~ s/(^| )(we|you|they) '(d|ll|re|ve)($END_SEP)/$1$2'$3$4/gm; #we/you/they
 # 	$$p_text =~ s/(^| )(I) '(d|ll|m|ve)($END_SEP)/$1$2'$3$4/gm; #I
-	
+
 # # 	#apostrophe at the end of the word which does not end with s
 # # 	$$p_text =~ s/S'(?= |\n|$)/S's /gm;
 # # 	$$p_text =~ s/([^Ss])'(?= |\n|$)/$1/gm;
@@ -1896,7 +1904,7 @@ sub apostrophes {
 
 ##################################################################
 # NAMED ENTITY TAGGING (using Stanford's NE tagger)
-##################################################################	
+##################################################################
 
 sub tag_ne {
 	my $P_TEXT = shift;
@@ -1931,10 +1939,10 @@ sub remove_diacritics {
 	$s =~ s/\xfc/ue/g;
 	$s =~ s/\xff/yu/g;
 
-	$s = Encode::decode( 'utf8', $s );  
+	$s = Encode::decode( 'utf8', $s );
 	$s = NFD( $s );   ##  decompose (Unicode Normalization Form D)
 # 	$s =~ s/\pM//g;         ##  strip combining characters
-	
+
 
 	$s =~ s/\x{00df}/ss/g;  ##  German beta “ß” -> “ss”
 	$s =~ s/\x{00c6}/AE/g;  ##  Æ
@@ -1956,7 +1964,7 @@ sub remove_diacritics {
 #	$s =~ s/[^[:alnum:]\.,;:\?!\-\+\*'"\$£¥%€&#=@°\(\)\/<>²³\n ]//g;  ##  clear everything else; optional
 
 	$s = NFC($s);
-	
+
 	return Encode::encode('utf8', $s);;
 	return $s;
 }
@@ -1964,7 +1972,7 @@ sub remove_diacritics {
 
 ##################################################################
 # SPECIAL STUFF (bugs, end of processing...)
-##################################################################	
+##################################################################
 
 
 
@@ -1978,31 +1986,31 @@ sub remove_bugs {
 	#German character ß
 	$$p_text =~ s/ ß-/ beta-/gm;
 	$$p_text =~ s/(\w)ß(\w)/ss/gm;
-	
+
 	#uppercase some lowercase roman numerals
 	$$p_text =~ s/(^| |\b)((?:xl|lx|xv|xi|xx|x)+v*(?:ii|iv|ix|i)*)($END_SEP)/$1.uc($2).$3/gem;
-	
+
 	#Euro sign
 	$$p_text =~ s/€/ EUR /gm;
 	#& sign
 	$$p_text =~ s/ & / et /gm;
-	
+
 	# Wikipedia patch
 	$$p_text =~ s/^\d{8,}([A-Z])/$1/gm;
 
-	#	
+	#
 	$$p_text =~ s/'+/'/gm;
-	
-	#	
+
+	#
 	$$p_text =~ s/'sa /'s a /gm;
-	
+
 	$$p_text =~ s/%/ % /g;
 	while ($$p_text =~ /(^| )(\d+)[xX](?=\d+(?=×|x|X|\/| |$))/) {
 		$$p_text =~ s/(^| )(\d+)[xX](?=\d+(?=×|x|X|\/| |$))/$1$2 x /gm;
 	}
-	
+
 # 	$$p_text =~ s/(\d)(century|army)(?= |$)/$1th $2/g;
-	
+
    	$$p_text =~ s/(\w)\(/$1 (/g;			# eg. x( -> x (
    	$$p_text =~ s/\)(\w)/) $1/g;			# eg. )x -> ) x;
 
@@ -2021,15 +2029,15 @@ sub remove_bugs {
    	$$p_text =~ s/ \#(\d+)( |\n|b)/ dièse $1$2/gm;		# in bc-news, "#" = "number" not "pound"
     $$p_text =~ s:([^\s</])(/+)\s:$1 $2 :g;	# e.g. "2002/ " -> "2002 / "
     $$p_text =~ s:([0-9])/1,000([^0-9,]):$1/1000$2:g; # e.g. "1/1,000" -> "1/1000"
-    
+
 	$$p_text =~ s/\n\. 's /'s /gm; # Wright\n\. 's -> Wright's
 	$$p_text =~ s/ 's /'s /gm;
 
-	$$p_text =~ s/_/ /g;	
+	$$p_text =~ s/_/ /g;
    	$$p_text =~ s/[\t ]+/ /g;
 	$$p_text =~ s/^ //gm;
 	$$p_text =~ s/ $//gm;
-	
+
  	trim_blanks($p_text);
 	return;
 }
@@ -2088,7 +2096,7 @@ sub compact_initials {
 	$$p_text =~ s/H \. M/H. M/g;
 	$$p_text =~ s/(^|\s|-)([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]) \. ([\.,:;\-!\?])/$1$2. $3/gm;
 	$$p_text =~ s/(^|\s|-)([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]) \. ([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ][a-zàáâãäåçèéêëìíîïñòóôõöøùúûüý]+)( \.| ,| :| ;| \-| !| \?|$)/$1$2. $3$4/gm;
-	
+
 	sub decision_compact {
 		my ($a, $b) = @_;
 		if (process_first_letter($b) == 1) {
@@ -2099,7 +2107,7 @@ sub compact_initials {
 		}
 	}
 	$$p_text =~ s/(^|\s|-)([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]) \. ([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ][a-zàáâãäåçèéêëìíîïñòóôõöøùúûüý]+) (?!\.| ,|:|;|\-|!|\?)/$1.decision_compact($2,$3)." ".$4/gem;
-	
+
 	sub sequence_initials {
 		my $seq = shift;
 		$seq =~ s/([A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ]\.?) (\-[A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ])/$1$2/g;
@@ -2155,24 +2163,24 @@ sub end {
 
 	$$P_TEXT =~ s/(^| )(\d+)[Aa]nd /$1$2 and /g;
 	$$P_TEXT =~ s/(^| )(\d+)[Tt]he /$1$2 the /g;
-	
+
 	$$P_TEXT =~ s/$YEAR_MARK/ /gmi;
 
 	# .html -> dot html ; .HTM -> dot htm
 	$$P_TEXT =~ s/(^| )\.([a-z]+)(?=$END_SEP)/"$1 dot ".lc($2)/gemi;
 	$$P_TEXT =~ s/(^| |[^A-Za-z])\.([a-z]+)(?=$END_SEP)/"$1 . ".lc($2)/gemi;
 
-	
+
 	$$P_TEXT =~ s/(^| )\.+([^\. ]+)\.+(?=$END_SEP)/$1$2/gm;
 
 
 	#remove dots at the beginning anything but space
 	$$P_TEXT =~ s/(^| )\.([^\. \n])/$1$2/gm;
 
-		
+
 	#remove dots just after words (no space in between)
 	$$P_TEXT =~ s/([a-z]{2,})\.(?=$END_SEP)/$1/gm;
-		
+
 
 # 	$$P_TEXT =~ s/[^A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝa-zàáâãäåçèéêëìíîïñòóôõöøùúûüýÿ0-9'_\+\-\!,;:¡¿\?\.\nß&<>\/ ]/ /g;
 	$$P_TEXT =~ s/(?<!<)\// /g;
@@ -2184,11 +2192,11 @@ sub end {
 	$$P_TEXT =~ s/([0-9])>(?= |\n|$)/$1/gm;
 
 	trim_blanks($P_TEXT);
-	
+
 	# Remove undesired characters
 	$$P_TEXT = Encode::decode_utf8($$P_TEXT);
-	$$P_TEXT =~ s/;/,/g;	
-	$$P_TEXT =~ s/[^A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝa-zàáâãäåçèéêëìíîïñòóôõöøùúûüýÿ0-9"'_\+\-\!,;:¡¿\?\.\nß&<>\/ ]/ /g;	
+	$$P_TEXT =~ s/;/,/g;
+	$$P_TEXT =~ s/[^A-ZÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝa-zàáâãäåçèéêëìíîïñòóôõöøùúûüýÿ0-9"'_\+\-\!,;:¡¿\?\.\nß&<>\/ ]/ /g;
 	$$P_TEXT =~ s/( |^)[^[:alpha:]"\.\?!,; ]($END_SEP) /$1 $2/gm;
 	$$P_TEXT =~ s/( |^)[^[:alnum:]"\-'<ß\.\?!,; \n]/$1/gm;
 	$$P_TEXT =~ s/[^[:alnum:]"\-'>\.\?\!,; \n]( |$)/ $1/gm;
@@ -2197,22 +2205,22 @@ sub end {
 #	$$P_TEXT =~ s/( |^)([^< ]+?)>( |\n|$)/ $1$2/gm;
 	$$P_TEXT = Encode::encode_utf8($$P_TEXT);
 
-	
+
 	#no hyphen between spaces at the beginning/end of a proper name or number
 	$$P_TEXT =~ s/(^| )- /$1/gm;
 	$$P_TEXT =~ s/ -$/$1/gm;
 	$$P_TEXT =~ s/(^| |\b)([A-Z0-9]\.?(?:[a-zA-Z0-9\-]\.?)+)-( |\n|$)/$1$2$3/gm;
 	$$P_TEXT =~ s/(^| )-([A-Z0-9]\.?(?:[a-zA-Z0-9\-]\.?)+)( |\b|\n|$)/$1$2$3/gm;
-	
+
 	# /xXx -> slash xXx
 	$$P_TEXT =~ s/(^| )\//$1 slash/gm;
-	
+
 	#xXxtv -> xXx-T.V.
 	$$P_TEXT =~ s/(^| )([[:alnum:]]+)[Tt]][Vv](?=$END_SEP)/$1$2T.V./gm;
 
 	# digits 2 letters if remaining single numbers
 	$$P_TEXT =~ s/(^| )(\d+(?:[\.,]\d+)*)(?=$END_SEP)/$1.number_to_fr($2)/gem;
-	
+
 	#double dots are replaced by single dots
 	$$P_TEXT =~ s/([^\.])\. *\.([^\.])/$1.$2/gm;
 	#uppercase every single letter (except a and y) : b -> B.
@@ -2229,18 +2237,18 @@ sub end {
 		return $x;
 	}
 	$$P_TEXT =~ s/(^| )(\d+)([a-z]+)(?=$END_SEP)/"$1$2".f(uc($3))/gem;
-	
+
 # 	# A\.' -> A\.
 # 	# A' -> A\.
-# 	$$P_TEXT =~ s/(^| )([A-Z]\.)'(?= |\n|$)/$1$2./gm;	
-# 	$$P_TEXT =~ s/(^| )([A-Z])'(?= |\n|$)/$1$2./gm;	
+# 	$$P_TEXT =~ s/(^| )([A-Z]\.)'(?= |\n|$)/$1$2./gm;
+# 	$$P_TEXT =~ s/(^| )([A-Z])'(?= |\n|$)/$1$2./gm;
 
 	$$P_TEXT =~ s/^ *\.//g;
-	
+
 	$$P_TEXT =~ s/ - / /g;
 	$$P_TEXT =~ s/ -$//gm;
 	$$P_TEXT =~ s/^- //gm;
-	
+
 
 	trim_blanks($P_TEXT);
 }
@@ -2250,20 +2258,3 @@ sub end {
 
 
 1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

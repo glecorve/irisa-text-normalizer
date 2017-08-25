@@ -74,7 +74,7 @@ my $STEP = 0;
 
 
 #106
- 		
+
 #############################################################
 # particularités
 #############################################################
@@ -83,10 +83,6 @@ $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." --Preliminary special pro
 	remove_bugs(\$TEXT);
 	#137
 $VERBOSE && print STDERR ".";
-# 	process_ing(\$TEXT);
-# $VERBOSE && print STDERR ".";
-# 	process_d(\$TEXT);
-# $VERBOSE && print STDERR ".";
 	apply_rules(\$TEXT, "$RSRC/special.rules");
 $VERBOSE && print STDERR ".";
 	triple_lettre(\$TEXT);
@@ -144,7 +140,7 @@ $VERBOSE && print STDERR ".\n";
 
 
 
-  	
+
 #############################################################
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Proper names processing.";
 # 	apply_rules(\$TEXT, "$RSRC/propername-apostrophe-removal.wikipedia.rules", "$RSRC/propername-apostrophe-blanking.wikipedia.rules");
@@ -160,7 +156,6 @@ $VERBOSE && print STDERR ".";
 	$TEXT =~ s/( | )+/ /gm;
 	$TEXT =~ s/ $//gm;
 	$TEXT =~ s/^ //gm;
-	#tag_ne(\$TEXT); # Named entity tagging using Stanford's tagger
 
 print $TEXT;
 print STDERR "\n";
@@ -191,5 +186,3 @@ EOF
 }
 
 #e#o#f#
-
-

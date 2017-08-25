@@ -58,7 +58,7 @@ my %abbr = ();
 my %begExcept = ();
 # for latin-9 (ISO 8859-15)
 our $alphanum = "[0-9a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
-our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]"; 
+our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
 our $upper = "[A-ZÀ-ÖØ-ÞŠŽŒŸ]";
 our $downer = "[a-zà-öø-ÿŠŽŒŸ]";
 
@@ -130,7 +130,7 @@ sub tok {
   $intok =~ s/ρ/rho/g;
   $intok =~ s/λ/lambda/g;
   $intok =~ s/Λ/lambda/g;
-  #$intok = Encode::decode( 'utf8', $intok );  
+  #$intok = Encode::decode( 'utf8', $intok );
   $intok =~ s/\xe4/ae/g;  ##  treat characters ä ñ ö ü ÿ
   $intok =~ s/\xf1/ny/g;  ##  this was wrong in previous version of this doc
   $intok =~ s/\xf6/oe/g;
@@ -155,28 +155,28 @@ sub tok {
 
   $intok =~ s/\|/ /g;
   $intok =~ s/^\d+([\.:\-\/\\]\d+)+: ?//gm; #skip time stamp at beginning of lines
-  
+
   #Remove HTML tags
   $intok =~ s/( |^)<[^>]+?('s|'| |\n|$)/$1$2/gm;
   $intok =~ s/( |^)([^< ]+?)>( |\n|$)/$1$2$3/gm;
   $intok =~ s/<\/?[^>]+>/ /g;
   $intok =~ s/[<>]{2,}/ /g;
-  
+
   #Space single quotes
   $intok =~ s/(^| )'(.*?[^s])'( |\n|$)/$1 ' $2 ' $3/g;
-  
+
   # treat independently each line of the token
   my @lin = split(/\n/, $intok);
   foreach my $str (@lin) {
       while ($str =~ /([0-9]),([0-9]{3})\b/) {
 	  $str = $`.$1.$2.$'; #'
       }
-      
-      
+
+
       #process parentheses ( X )
       # if X contains a number -> remove
       # if |X| <= 2 -> remove
-      # otherwise, keep it    
+      # otherwise, keep it
       sub proc_par {
 	  my $x = shift;
 	  if ($x =~ /^ *\d+ *$/) { return ""; } # line modified to keep birth and death dates
@@ -185,10 +185,10 @@ sub tok {
       }
       $str =~ s/\(at\)/ @ /g;
       $str =~ s/\(([^\)]+)\)/" ".proc_par($1)." "/ge;
-      
+
       #split items
       $str =~ s/ ?(?:■|•) ?/\n- /g;
-      
+
       #remove long (5+) sequence of single letters and number
       $str =~ s/ (?:(?:[a-zA-Z]|-?[0-9][0-9\.]*) ){5,}/\n/g;
 
@@ -196,8 +196,8 @@ sub tok {
       # joins the address with the following word
       # e.g. www.nodo50.org/mareanegra/ sans oublier
       $str =~ s/(http:\/\/|www\.)(\S+)\/( |$punct1|\.|$quotes|$)/$1$2$3/g;
-      
-      
+
+
 
 
       # put spaces around punctuation marks
@@ -221,7 +221,7 @@ sub tok {
 
       # split numbers around , for lists and years
       # e.g. 8,11,12 et 13 juillet> 8, 11 , 12 et 13 juillet
-      #... JO de 1992,1996 et 2004 ... -> JO de 1992 , 1996 et 2004 
+      #... JO de 1992,1996 et 2004 ... -> JO de 1992 , 1996 et 2004
       $str =~ s/(^|\b)([0-9]+),([0-9]+),([0-9]+)((?:,[0-9]+)*) +(and|or) ([0-9])/$1.$2." , ".$3." , ".$4.treatLstNb($5)." ".$6." ".$7/ge;
       while($str =~ s/(^|\b)([0-9]+),([0-9]+)(\b|$)/$1.&checkYrs($2,$3).$4/ge) { }
       $str =~ s/¶¶¶/,/g;
@@ -229,7 +229,7 @@ sub tok {
       # minutes, seconds or inches
       $str =~ s/([0-9]) +(\'|\'\') */$1$2 /g;
       $str =~ s/([0-9]) +(\'|\'\') +([0-9]{1,2})/$1$2$3/g;
-      
+
       # for acronyms with several ., put an extra . at the end of the
       # word if it is the end of a sentence
       $str =~ s/(${upper})\.(${upper})\.(${upper})\. +(${upper})/$1.$2.$3. . $4/g;
@@ -242,8 +242,8 @@ sub tok {
       while ($str =~ s/(http:\/\/|www\.)(\S+) +\/ +(\S)/$1$2\/$3/) { }
       while ($str =~ s/(http:\/\/|www\.)(\S+) +\/(\S)/$1$2\/$3/) { }
       while ($str =~ s/(http:\/\/|www\.)(\S+)\/ +(\S)/$1$2\/$3/) { }
-      
-      
+
+
       # Delete ending "/" and "\"
 #   $str =~ s/(?<!http:\/)[\/\\]( |\n|$)/$1/gim;
       # NB: ? remains with spaces around them for Web adresses but they
@@ -274,7 +274,7 @@ sub tok {
 	      $res .= &treatDot($w)." ";
 	  }
       }
-      
+
 
       $res .= "\n";
   }
@@ -297,13 +297,13 @@ sub tok {
   $res =~ s/ +/ /g;
   $res =~ s/ $//g;
   $res =~ s/^ //g;
-  
+
   #downcase sequence of 4+ uppercase words
   $res =~ s/(^| )([A-Z][A-Z0-9'-]*) ((?:[A-Z0-9][A-Z0-9'-]* ?,? ){1,})([A-Z][A-Z0-9'-]+)/$1.ucfirst(lc($2)).lc(" $3 $4")/gem;
-	
+
   $res =~ s/\n\n+/\n/gm;
   #$res = Encode::encode_utf8($res);
-  
+
   $res =~ s/‘/'/gm;
   $res =~ s/–/-/gm;
 
@@ -326,7 +326,7 @@ sub checkYrs {
   }
   else {
     return "$a¶¶¶$b"; # to avoid an infinite loop when calling this function
-  } 
+  }
 }
 
 
@@ -351,7 +351,7 @@ sub treatLstNb {
 # - word to process
 sub treatDot {
   my $w = shift;
-  
+
   # $w is segmented by . except
   # ...
   # in a number
@@ -367,7 +367,7 @@ sub treatDot {
   elsif ($w =~ /(?:${alphanum}*)\.(?:$webdomain)/i) { }
   elsif ($w =~ /[0-9]\.[0-9]/) { }
   elsif (defined $abbr{$w}) {}
-  elsif ($w =~ /(${upper})\.(${upper})\.(${upper})\.?$/o) { 
+  elsif ($w =~ /(${upper})\.(${upper})\.(${upper})\.?$/o) {
     # normalize acronyms with . e.g., O.N.U.=>ONU (at least 3 letters as there can be first names with 2 capital letters, e.g. J.C. Tricher)
     $w =~ s/\.//g;
   }
@@ -375,11 +375,12 @@ sub treatDot {
   elsif ($w =~ /^(${upper})\.$/o) {}
   elsif ($w =~ /^(${upper})\.(${upper})\.$/o) {}
   else {
-    $w =~ s/(${alphanum}*)(\.)(${alphanum}*)/$1 $2 $3/og;
+    $w =~ s/(?!${punct})(\.)(?!${punct})/$1 $2 $3/og;
+    # $w =~ s/(${alphanum}*)(\.)(${alphanum}*)/$1 $2 $3/og;
   }
 
   return $w;
-  
+
 }
 
 1;

@@ -16,7 +16,7 @@ foreach my $f (@ARGV) {
     while (my $t = <F>) {
 	chomp;
 	#$t = remove_diacritics($t);
-	$t = &basicTokenizerFr::tok($t)."\n";           
+	$t = &basicTokenizerFr::tok($t)."\n";
 	
 	print $t;
     }

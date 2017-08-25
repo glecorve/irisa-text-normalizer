@@ -60,8 +60,6 @@ close(INPUT);
 
 my $weak_punc = '(?:,|;|:|\(|\)|¡|¿)';
 
-
-
 load_pos($WIKTIONARY_WORD_POS);
 load_lexicon($LEXIQUE_FILE);
 my $STEP = 0;
@@ -76,7 +74,7 @@ $VERBOSE && print STDERR ".\n";
 
 #############################################################
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Hyphenation and processing of apostrophes for all the words";
-	apply_rules(\$TEXT, "$RSRC/hyphenation-remove.rules", "$RSRC/hyphenation-add.rules", "$RSRC/hyphenation-general.rules", "$RSRC/hyphenation-latin_locutions.rules");	
+	apply_rules(\$TEXT, "$RSRC/hyphenation-remove.rules", "$RSRC/hyphenation-add.rules", "$RSRC/hyphenation-general.rules", "$RSRC/hyphenation-latin_locutions.rules");
 $VERBOSE && print STDERR ".";
 	hyphenate(\$TEXT);
 $VERBOSE && print STDERR ".";
@@ -129,8 +127,8 @@ $VERBOSE && print STDERR ".\n";
 	if ($KEEP_PUNC == 0) {
 		$TEXT =~ s/$weak_punc/ /gm;
 	}
-	
-	
+
+
 #############################################################
 # One sentence per line + removal of all punctuation signs
 #############################################################
@@ -168,8 +166,8 @@ $VERBOSE && print STDERR ".";
 # 		}
 # 		$TEXT =~ s/^\.+//mg;
 # 	}
-# 
-# 
+#
+#
 # 	$TEXT =~ s/( | )+/ /mg;
 # 	if ($KEEP_PARA == 0 ) {
 # 	$TEXT =~ s/(\r+)//gm;
@@ -178,8 +176,8 @@ $VERBOSE && print STDERR ".";
 # 	}
 # 	$TEXT =~ s/ $//g;
 # $VERBOSE && print STDERR ".";
-# 
-# 
+#
+#
 # $VERBOSE && print STDERR "\n--\n";
 # print STDERR "\n";
 # #extra return character if needed
@@ -215,5 +213,3 @@ EOF
 }
 
 #e#o#f#
-
-
