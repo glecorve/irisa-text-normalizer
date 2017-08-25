@@ -1,7 +1,7 @@
 # irisa-text-normalizer
-# Text normalisation tools from IRISA lab
+Text normalisation tools from IRISA lab
 
-# Synopsis
+## Synopsis
 
 The tools provided here are split into 3 steps:
 1. Tokenisation (adding blanks around punctation marks, dealing with special cases like URLs, etc.)
@@ -9,25 +9,25 @@ The tools provided here are split into 3 steps:
 3. Specific normalisation (projection the generic texts into specific forms)
 
 
-# Supported languages:
+## Supported languages:
 
 - English
 - French
 
-# Configuration
+## Configuration
 
 See INSTALL file
 
-# Commands
+## Commands
 
-LANGUAGE="en"
-# (or "fr")
+> LANGUAGE="en"
+> \# (or "fr")
 
-## Tokenisation
+### Tokenisation
 
     perl bin/$LANGUAGE/basic-tokenizer.pl examples/$LANGUAGE/text.raw > examples/$LANGUAGE/text.tokenized
 
-## Generic normalisation
+### Generic normalisation
 
     perl bin/$LANGUAGE/start-generic-normalisation.pl examples/$LANGUAGE/text.tokenized > examples/$LANGUAGE/text.norm.step1
     bash bin/$LANGUAGE/tag-named-entities.sh examples/$LANGUAGE/text.norm.step1 > examples/$LANGUAGE/text.norm.step2
@@ -37,7 +37,7 @@ or simply:
 
     bash bin/$LANGUAGE/generic-normalisation.sh text-normalisation/examples/$LANGUAGE/text.tokenized
 
-## 2 examples of specific normalisations
+### 2 examples of specific normalisations
 
     perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/asr.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.asr
     perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/indexing.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.indexing
