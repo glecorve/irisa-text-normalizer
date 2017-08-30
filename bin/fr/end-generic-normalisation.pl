@@ -119,16 +119,6 @@ $VERBOSE && print STDERR ".\n";
 #$VERBOSE && print STDERR ".\n";
 
 
-
-
-#############################################################
-# Remove weak punctuation signs
-#############################################################
-	if ($KEEP_PUNC == 0) {
-		$TEXT =~ s/$weak_punc/ /gm;
-	}
-
-
 #############################################################
 # One sentence per line + removal of all punctuation signs
 #############################################################
@@ -143,47 +133,6 @@ $VERBOSE && print STDERR ".";
 	end(\$TEXT);
 $VERBOSE && print STDERR ".";
 
-# $TEXT =~ s/(^| )['\-](?= |\n|$)/$1/mg;
-# $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Splitting into sentences (1 per line).\n";
-# 	if ($KEEP_PUNC == 0) {
-# 		$TEXT =~ s/$weak_punc/ /mgo;
-# 		if ($ESTER == 1 || $KEEP_PARA == 1) {
-# 			$TEXT =~ s/( )(\.|\.\.\.|\?|!)( |$)/$3/mg;
-# 		}
-# 		else {
-# 			$TEXT =~ s/( )(\.|\.\.\.|\?|!)( |$)/\n/mg;
-# 		}
-# 		$TEXT =~ s/(\.\.+|\?+|!+)/ /mg;
-# 		$TEXT =~ s/^\.+//mg;
-# 		$TEXT =~ s/ \.+$//mg;
-# 	}
-# 	else {
-# 		if ($ESTER == 1 || $KEEP_PARA == 1) {
-# 			$TEXT =~ s/( )(\.|\.\.\.|\?|!)( |$)/$1$2$3/mg;
-# 		}
-# 		else {
-# 			$TEXT =~ s/( )(\.|\.\.\.|\?|!)( |$)/$1$2\n/mg;
-# 		}
-# 		$TEXT =~ s/^\.+//mg;
-# 	}
-#
-#
-# 	$TEXT =~ s/( | )+/ /mg;
-# 	if ($KEEP_PARA == 0 ) {
-# 	$TEXT =~ s/(\r+)//gm;
-# 	$TEXT =~ s/(\n)+ /$1/gm;
-# 	$TEXT =~ s/(\n)+/$1/gm;
-# 	}
-# 	$TEXT =~ s/ $//g;
-# $VERBOSE && print STDERR ".";
-#
-#
-# $VERBOSE && print STDERR "\n--\n";
-# print STDERR "\n";
-# #extra return character if needed
-# if ($TEXT !~ /\n$/) {
-# 	$TEXT .= "\n";
-# }
 print $TEXT;
 print STDERR "\n";
 

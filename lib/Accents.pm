@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 #
-# Accentueur.pm -- Gwénolé Lecorvé
+# Accentueur.pm -- Gwï¿½nolï¿½ Lecorvï¿½
 #
-# 
+#
 ########################################################
 
-package Accentueur;
+package Accents;
 
 use Exporter;
 use strict;
@@ -20,15 +20,15 @@ my $NOT_RESOLVED = 4;
 sub new {
 	my $class = shift;
 	my $this = {};
-		
+
 	bless $this;
-	
+
 # 	my %deja_calcules;
 	my $lex_path = shift;
 	my $lex_path_2 = shift;
 	my $lex_path_3 = shift;
 
-	
+
 
 	open(LEX, "< $lex_path") or die("Unable to open $lex_path.\n");
 	while(<LEX>) {
@@ -38,7 +38,7 @@ sub new {
 		$this->{lexique}{$_} = 1;
 	}
 	close(LEX);
-	
+
 	open(LEX, "< $lex_path_2") or die("Unable to open $lex_path_2.\n");
 	while(<LEX>) {
 		chomp;
@@ -57,53 +57,53 @@ sub new {
 
 
 my %equivalence = (
-"a" => ["a","à","â","ä"],
-"à" => ["a","à","â","ä"],
-"â" => ["a","à","â","ä"],
-"ä" => ["a","à","â","ä"],
+"a" => ["a","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["a","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["a","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["a","ï¿½","ï¿½","ï¿½"],
 "b" => ["b"],
-"c" => ["c","ç"],
-"ç" => ["c","ç"],
+"c" => ["c","ï¿½"],
+"ï¿½" => ["c","ï¿½"],
 "d" => ["d"],
-"e" => ["e","è","é","ê","ë"],
-"è" => ["e","è","é","ê","ë"],
-"é" => ["e","è","é","ê","ë"],
-"ê" => ["e","è","é","ê","ë"],
-"ë" => ["e","è","é","ê","ë"],
-# "É" => ["É","e","è","é","ê","ë"],
-# "e" => ["É","e","è","é","ê","ë"],
-# "è" => ["É","e","è","é","ê","ë"],
-# "é" => ["É","e","è","é","ê","ë"],
-# "ê" => ["É","e","è","é","ê","ë"],
-# "ë" => ["É","e","è","é","ê","ë"],
+"e" => ["e","ï¿½","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["e","ï¿½","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["e","ï¿½","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["e","ï¿½","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "ï¿½" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "e" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "ï¿½" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "ï¿½" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "ï¿½" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
+# "ï¿½" => ["ï¿½","e","ï¿½","ï¿½","ï¿½","ï¿½"],
 "f" => ["f"],
 "g" => ["g"],
 "h" => ["h"],
-"i" => ["i","î","ï"],
-"î" => ["i","î","ï"],
-"ï" => ["i","î","ï"],
+"i" => ["i","ï¿½","ï¿½"],
+"ï¿½" => ["i","ï¿½","ï¿½"],
+"ï¿½" => ["i","ï¿½","ï¿½"],
 "j" => ["j"],
 "k" => ["k"],
 "l" => ["l"],
 "m" => ["m"],
 "n" => ["n"],
-"o" => ["o","ô","ö"],
-"ô" => ["o","ô","ö"],
-"ö" => ["o","ô","ö"],
+"o" => ["o","ï¿½","ï¿½"],
+"ï¿½" => ["o","ï¿½","ï¿½"],
+"ï¿½" => ["o","ï¿½","ï¿½"],
 "p" => ["p"],
 "q" => ["q"],
 "r" => ["r"],
 "s" => ["s"],
 "t" => ["t"],
-"u" => ["u","ù","û","ü"],
-"ù" => ["u","ù","û","ü"],
-"û" => ["u","ù","û","ü"],
-"ü" => ["u","ù","û","ü"],
+"u" => ["u","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["u","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["u","ï¿½","ï¿½","ï¿½"],
+"ï¿½" => ["u","ï¿½","ï¿½","ï¿½"],
 "v" => ["v"],
 "w" => ["w"],
 "x" => ["x"],
-"y" => ["y","ÿ"],
-"ÿ" => ["y","ÿ"],
+"y" => ["y","ï¿½"],
+"ï¿½" => ["y","ï¿½"],
 "z" => ["z"]
 );
 
@@ -111,31 +111,31 @@ my %equivalence = (
 
 
 my @class_eq = (
-"aàâä",
+"aï¿½ï¿½ï¿½",
 "b",
-"cç",
+"cï¿½",
 "d",
-"eèéêë",
+"eï¿½ï¿½ï¿½ï¿½",
 "f",
 "g",
 "h",
-"iîï",
+"iï¿½ï¿½",
 "j",
 "k",
 "l",
 "m",
 "n",
-"oôö",
+"oï¿½ï¿½",
 "p",
 "q",
 "r",
 "s",
 "t",
-"uùûü",
+"uï¿½ï¿½ï¿½",
 "v",
 "w",
 "x",
-"yÿ",
+"yï¿½",
 "z"
 );
 
@@ -164,7 +164,7 @@ sub prefixer {
 	my $p_tab = shift;
 	my @ret = ();
 	my $len = 0;
-# 	print "--- préfixer $str\n";
+# 	print "--- prï¿½fixer $str\n";
 # 	print STDERR "\n";
 	if (!defined($p_tab) || @$p_tab == 0) { push(@ret, $str); }
 	else {
@@ -215,7 +215,7 @@ sub build_variantes {
 		my $i = 0;
 		my $p_tmp_var;
 		my $p_queues = $this->build_variantes($queue);
-		if ($tete =~ /^[aeiouycàáâãäåæèéêëìíîïòóôõöøùúûüÿç]$/) {
+		if ($tete =~ /^[aeiouycï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]$/) {
 			$p_v_var = $equivalence{$tete};
 			if (defined($p_v_var)) {
 				@v_var = @{$p_v_var};
@@ -240,7 +240,7 @@ sub accentue {
 	my $this = shift;
 	my $w = shift;
 	my @variantes = ();
-	if ($w =~ /^[a-zàáâãäåæèéêëìíîïòóôõöøùúûüÿç]+$/ && $this->{lexique}{$w} != 1) {
+	if ($w =~ /^[a-zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]+$/ && $this->{lexique}{$w} != 1) {
 		@variantes = @{$this->build_variantes($w)}
 	}
 	return \@variantes;
@@ -269,9 +269,9 @@ sub accentuer_si_necessaire {
 	my $closest_variant = 0;
 	if (!defined($this->{deja_calcule}{$w})) {
 		#seulement si le mot est en minuscules
-		# (le cas des mots avec une majuscule est trop compliqué)
+		# (le cas des mots avec une majuscule est trop compliquï¿½)
 		#et le mot n'est pas dans le lexique
-		if ($w =~ /^[a-zàáâãäåæèéêëìíîïòóôõöøùúûüÿç\-_]+$/ && $this->{lexique}{$w} != 1) {
+		if ($w =~ /^[a-zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\-_]+$/ && $this->{lexique}{$w} != 1) {
 	# 		print "$w -- ";
 			$p_variantes = $this->build_variantes($w);
 			if (defined($p_variantes)) {
@@ -293,7 +293,7 @@ sub accentuer_si_necessaire {
 							}
 							# des qu'il y a plusieurs solutions envisageables
 							# on retourne la variante avec le moins de modif
-							# si toujours égalité
+							# si toujours ï¿½galitï¿½
 							# on retourne le mot d'origine
 							elsif ($dist < $closest_variant) {
 								$retour = $variantes[$i];
@@ -317,10 +317,9 @@ sub accentuer_si_necessaire {
 		}
 		$this->{deja_calcules}{$w} = $retour;
 	}
-	
+
 	return ($this->{deja_calcules}{$w}, $this->{deja_calcules_statut}{$w});
 
 }
 
 1;
-

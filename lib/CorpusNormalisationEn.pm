@@ -15,8 +15,10 @@ use File::Basename;
 use Cwd 'abs_path';
 use lib dirname( abs_path(__FILE__) )."/.";
 
-use capLetter;
-use tokenize;
+use strict;
+
+use Case;
+use RulesApplication;
 use Encode;
 use Unicode::Normalize;
 use Lingua::EN::Numbers qw(num2en num2en_ordinal);
@@ -39,14 +41,13 @@ use open qw(:std :utf8);
 use vars qw(@ISA @EXPORT);
 @ISA=qw(Exporter);
 BEGIN {
-  @EXPORT = qw(%lexicon %pos &load_pos &define_rule_preprocessing &define_rule_case_unsensitive &define_rule_case_sensitive &undefine_rule_preprocessing &load_lexicon &load_NP &first_letter &url &currencies &units &date_and_time &roman_numbers &numbers &remove_bugs &apply_rules &apply_rules_comptes &triple_lettre &complex_abbreviations &acronyms &compact_initials &hyphenate &apostrophes &end &split_entities &telephone &tag_ne &remove_diacritics &process_ing &process_d &trim_blanks);
+  @EXPORT = qw(%lexicon %pos &load_pos &define_rule_preprocessing &undefine_rule_preprocessing &load_lexicon &load_NP &first_letter &url &currencies &units &date_and_time &roman_numbers &numbers &remove_bugs &apply_rules &apply_rules_comptes &triple_lettre &complex_abbreviations &acronyms &compact_initials &hyphenate &apostrophes &end &split_entities &telephone &tag_ne &remove_diacritics &process_ing &process_d &trim_blanks);
 }
 
 
 our %pos;
 our %lexicon;
 my %NP;
-my %maps;
 
 my $MONTH = "(January|February|March|April|May|June|July|August|September|October|November|December|Jan\.|Feb\.|Mar\.|Apr\.|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)";
 my $DAY = "(Moday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)";
@@ -80,19 +81,19 @@ sub init()
 ##################################################################
 
 sub define_rule_preprocessing {
-	tokenize::define_rule_preprocessing(shift(@_));
+	RulesApplication::define_rule_preprocessing(shift(@_));
 }
 
 sub undefine_rule_preprocessing {
-	tokenize::undefine_rule_preprocessing();
+	RulesApplication::undefine_rule_preprocessing();
 }
 
 sub define_rule_case_unsensitive {
-	tokenize::define_rule_case_unsensitive();
+	RulesApplication::define_rule_case_unsensitive();
 }
 
 sub define_rule_case_sensitive {
-	tokenize::define_rule_case_sensitive();
+	RulesApplication::define_rule_case_sensitive();
 }
 
 sub load_pos {
@@ -168,52 +169,6 @@ sub load_list {
 	close(F);
 }
 
-
-##################################################################
-# APPLY MAPPING RULES (generic function: read a mapping file)
-##################################################################
-
-sub load_rules {
-	my $KEY = shift;
-	my @rule_files = @_;
-
-	my @map;
-	reset_token_map();
-
-	for my $i (0 .. $#rule_files) {
-	tokenize::load_token_map(\@map, $rule_files[$i]);
-	}
-
-	$maps{$KEY} = \@map;
-	return;
-}
-
-sub apply_rules {
-	my $P_TEXT = shift;
-	my @rule_files = @_;
-	for my $i (0 .. $#rule_files) {
-     if ($maps{$rule_files[$i]} == 0) {
-       load_rules($rule_files[$i], $rule_files[$i]);
-     }
-	   tokenize::map_string($P_TEXT, $maps{$rule_files[$i]});
-   }
-	return;
-}
-
-sub apply_rules_comptes {
-	my $TEXT = shift;
-	my @rule_files = @_;
-
-	my @map;
-	reset_token_map();
-
-	for my $i (0 .. $#rule_files) {
-	tokenize::load_token_map(\@map, $rule_files[$i]);
-	}
-
-	return tokenize::map_string_on_counts($TEXT, \@map);
-
-}
 
 
 
@@ -369,6 +324,7 @@ sub process_first_letter {
 	$w =~ s/^(.*?)-[a-z].*$/$1/;
 	$w =~ s/^(.*s)'$/$1/;
 	$w =~ s/^(.*)'s$/$1/;
+    $w =~ s/^(.*)\./$1/;
 
 	if ($w =~ /^[B-Z]$/) {
 		$retour = 0;

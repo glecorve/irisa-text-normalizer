@@ -8,14 +8,15 @@
 # ================================================================= #
 # ================================================================= #
 
-package tokenize;
+package RulesApplication;
 
 # use locale;
 # use POSIX qw(locale_h);
 # setlocale(LC_CTYPE, "ISO-8859-1");
 
-# use strict;
+use strict;
 use warnings;
+use Data::Dumper;
 # use locale;
 use File::Temp qw/ tempfile /;
 # use POSIX qw(strftime locale_h);
@@ -27,16 +28,12 @@ use strict;
 require Exporter;
 
 our @ISA=qw/Exporter/;
-our @EXPORT = qw/&define_rule_preprocessing &undefine_rule_preprocessing reset_token_map load_token_map map_string map_string_on_counts &downcase/;
-
-# BEGIN {
-#   print "Module \"tokenize\" version 0.1 (revision to be defined)\n";
-# }
+our @EXPORT = qw/%maps &define_rule_preprocessing &undefine_rule_preprocessing  &define_rule_case_unsensitive &define_rule_case_sensitive reset_token_map load_token_map map_string map_string_on_counts &load_rules &apply_rules &apply_rules_counts/;
 
 our $debug = 0;
 my $END_SEP = " |\n|\$|'[sS]? ";
 
-
+our %maps = ();
 my %all_rules;
 my $preprocessing = undef;
 my $case_sensitivity = 1;
@@ -124,23 +121,19 @@ sub load_token_map {
 	($w1, $w2) = ($1, $2);
 
 	#       if (grep $_ eq "$1", @{$mapp}) {
-	# 	warn "tokenize::load_token_map() -- multiple mapping rules for $1 (ignoring)\n";
+	# 	warn "RulesApplication::load_token_map() -- multiple mapping rules for $1 (ignoring)\n";
 	#       }
 	if ($w1 =~ /^\s*$/) {
-# 		print "A $w1 -> $w2\n";
-		warn "tokenize::load_token_map() -- empty mapping rules for NULL => $w2 (ignoring)\n";
+		warn "RulesApplication::load_token_map() -- empty mapping rules for NULL => $w2 (ignoring)\n";
 	}
 	elsif ($w2 =~ /^\s*$/) {
-# 		print "B $w1 -> $w2\n";
-		warn "tokenize::load_token_map() -- empty mapping rules for $w1 => NULL (ignoring)\n";
+		warn "RulesApplication::load_token_map() -- empty mapping rules for $w1 => NULL (ignoring)\n";
 	}
 	elsif ($w1 eq $w2) {
-# 		print "B $w1 -> $w2\n";
-#		warn "tokenize::load_token_map() -- useless mapping $w1 => $2 (ignoring)\n";
+#		warn "RulesApplication::load_token_map() -- useless mapping $w1 => $2 (ignoring)\n";
 	}
 	elsif (defined($all_rules{$w1}) && $all_rules{$w1} ne $w2) {
-# 		print "C $w1 -> $w2\n";
-		warn "tokenize::load_token_map() -- multiple mapping rules for $w1 => $w2 | $all_rules{$w1} (ignoring)\n";
+		warn "RulesApplication::load_token_map() -- multiple mapping rules for $w1 => $w2 | $all_rules{$w1} (ignoring)\n";
 	}
 	else {
 # 		print "D $w1 -> $w2\n";
@@ -180,14 +173,58 @@ sub load_token_map {
   }
 
   if ($debug) {
-    print STDERR "tokenize::load_token_map() -- $_->{original} => $_->{rewrite}\n" foreach @{$mapp};
+    print STDERR "RulesApplication::load_token_map() -- $_->{original} => $_->{rewrite}\n" foreach @{$mapp};
   }
   	return;
 }
 
-# ---------------------------- #
-# ----- sub map_string() ----- #
-# ---------------------------- #
+
+##################################################################
+# APPLY MAPPING RULES (generic function: read a mapping file)
+##################################################################
+
+sub load_rules {
+	my $KEY = shift;
+	my @rule_files = @_;
+
+	my @map;
+	reset_token_map();
+
+	for my $i (0 .. $#rule_files) {
+	RulesApplication::load_token_map(\@map, $rule_files[$i]);
+	}
+
+	$maps{$KEY} = \@map;
+	return;
+}
+
+sub apply_rules {
+	my $P_TEXT = shift;
+	my @rule_files = @_;
+	for my $i (0 .. $#rule_files) {
+     if (!defined($maps{$rule_files[$i]})) {
+       load_rules($rule_files[$i], $rule_files[$i]);
+     }
+	   map_string($P_TEXT, $maps{$rule_files[$i]});
+   }
+	return;
+}
+
+sub apply_rules_counts {
+	my $TEXT = shift;
+	my @rule_files = @_;
+
+	my @map;
+	reset_token_map();
+
+	for my $i (0 .. $#rule_files) {
+	RulesApplication::load_token_map(\@map, $rule_files[$i]);
+	}
+
+	return RulesApplication::map_string_on_counts($TEXT, \@map);
+
+}
+
 #
 # Map words in a string according to the specified map.
 #
@@ -209,9 +246,6 @@ sub map_string {
 
 }
 
-# ----------------------------------------- #
-# ----- sub map_string_line_by_line() ----- #
-# ----------------------------------------- #
 #
 # Map words in a string according to the specified map.
 # BUT 1 pattern <=> 1 full line
@@ -230,19 +264,5 @@ sub map_string_on_counts {
   return $s;
 }
 
-# -------------------------- #
-# ----- sub downcase() ----- #
-# -------------------------- #
-#
-# Substitute lc() functions not dependant on locale.
-#
-sub downcase {
-  my $w = shift;
-  if (defined($w)) {
-	$w =~ tr/ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝÇ/abcdefghijklmnopqrstuvwxyzàáâãäåæèéêëìíîïòóôõöøùúûüÿç/;
-  }
-
-  return $w;
-}
 
 1;

@@ -1,12 +1,12 @@
 #!/usr/bin/perl --  # -*-Perl-*-
 #
-# spellnum.pm	-- Francois Yvon
+# NumbersFr.pm	-- Francois Yvon
 #
-# $Id: spellnum.pm,v 1.4 2005/02/07 10:27:38 yvon Exp $
-# 
+# $Id: NumbersFr.pm,v 1.4 2005/02/07 10:27:38 yvon Exp $
+#
 ########################################################
 
-package spellnum;
+package NumbersFr;
 
 use Exporter;
 @ISA=qw(Exporter);
@@ -23,7 +23,7 @@ use vars qw($intmax);
 # Maximum utilisable
 my $intmax=999999999;
 
-# Définition des chiffres
+# DÃ©finition des chiffres
 my @s;
 my @wrd;
 
@@ -31,7 +31,7 @@ sub init_spell {
 
     my $i;
     my $wrd;
-    $wrd[0] = "zéro";
+    $wrd[0] = "zÃ©ro";
     $wrd[1] = "un";
     $wrd[2] = "deux";
     $wrd[3] = "trois";
@@ -70,7 +70,7 @@ sub init_spell {
     for $i (7)       { $k = ($i-1)*10; $j = 10*$i + 1; $wrd[$j] = $wrd[$k] . "-et-" . $wrd[11];}  # soixante-et-onze ...
     for $i (9)       { $k = ($i-1)*10; $j = 10*$i + 1; $wrd[$j] = $wrd[$k] . "-" . $wrd[11];}     # quatre-vingt-onze ...
     for $i (7,9)     { for $l (2..9) { $k = 10*($i-1); $j = 10 *$i + $l; $wrd[$j] = $wrd[$k] . "-" . $wrd[10 + $l];}}
-    
+
     return (1);
 }
 
@@ -82,7 +82,7 @@ sub spell {
     my $num = shift;
     my $int, $dec, $plur;
 
-    
+
 #     print $num."\n";
     if ($num =~ /^[0-9]+$/) {
       if ($num =~ /^0([0-9])$/) {
@@ -96,16 +96,16 @@ sub spell {
       $spell = int2let($1);
       $plur  = $3;
       if ($spell =~ /(.*)e$/) {
-	  $spell = $1 . "ième" . $plur;
+	  $spell = $1 . "iÃ¨me" . $plur;
       }
       elsif ($spell =~ /(.*)f$/) {
-	  $spell = $1 . "vième" . $plur;
+	  $spell = $1 . "viÃ¨me" . $plur;
       }
       elsif ($spell =~ /(.*)cents$/) {
-	  $spell = $1 . "centième" . $plur;
+	  $spell = $1 . "centiÃ¨me" . $plur;
       }
       else {
-	  ($spell .= "ième" . $plur)
+	  ($spell .= "iÃ¨me" . $plur)
       }
       return ($spell);
     }
@@ -113,9 +113,9 @@ sub spell {
       ($int, $dec) = split(/\,/, $num);
       return ( int2let ($int) . " virgule " . int2let ($dec));
     }
-    elsif ($num =~ /^[0-9]+\.[0-9]+$/) { 
+    elsif ($num =~ /^[0-9]+\.[0-9]+$/) {
       ($int, $dec) = split(/\./, $num);
-      return ( int2let ($num) . " point " . int2let ($dec)); 
+      return ( int2let ($num) . " point " . int2let ($dec));
     }
     #more than one comma
     elsif ($num =~ /^[0-9]+(\,[0-9]+)+$/) {
@@ -123,8 +123,8 @@ sub spell {
 	my $str = "";
 	$str .= int2let ($_)." , " foreach (@tab);
 	chop $str; chop $str; chop $str;
-	return $str; 
-      
+	return $str;
+
     }
     else {
 #      print STDERR "$num is not a valid digit\n";
@@ -141,7 +141,7 @@ sub spell {
 		$str .= int2let($n)." ";
 	}
      }
-     return ($str); 
+     return ($str);
     }
   }
 
@@ -180,7 +180,7 @@ sub int2let {
   if ($int == 0)      { return $wrd[0]; }
 
   for $m (1000000, 1000, 1) {
-    $div  = int($int / $m);     # le resultat de la division entière
+    $div  = int($int / $m);     # le resultat de la division entiÃ¨re
     $rest = $int - $m * $div;   # le reste
     if ($div) {
       if ($div != 1 || $m != 1000) { $spell .= " " . num2let($div); }
@@ -200,19 +200,19 @@ sub num2let ($)
 {
   my $num   = shift;
   my $spell = "";
-  
+
   $c = int($num / 100);
   # centaines
   if ($c != 0) {
     if ($c > 1) {$spell .= $wrd[$c] . " " ;}
     $spell .= "cent";
   }
-  # dizaines et unités
+  # dizaines et unitÃ©s
   if ($num - $c * 100 > 0) {
     $spell .= " " . $wrd[$num - $c * 100];
   }
   # sinon c'est un multiple de 100 - accord en nombre
-  else { 
+  else {
     if ($c > 1) { $spell .= "s";}
   }
   return ($spell);

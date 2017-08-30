@@ -2,7 +2,7 @@
 
 # Tokenize a text for the French language
 #
-package basicTokenizerEn;
+package TokenizerEn;
 
 use strict;
 use Cwd 'abs_path';
@@ -61,34 +61,6 @@ our $alphanum = "[0-9a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
 our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
 our $upper = "[A-ZÀ-ÖØ-ÞŠŽŒŸ]";
 our $downer = "[a-zà-öø-ÿŠŽŒŸ]";
-
-
-
-# ---------------------- #
-#     sub downcase()
-# for ISO 8859-15 (latin-9)
-# ---------------------- #
-sub downcase {
-  my $w = shift;
-
-  $w =~ tr/ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝŸÇÐÑÞŠŽŒ/abcdefghijklmnopqrstuvwxyzàáâãäåæèéêëìíîïòóôõöøùúûüýÿçðñþšžœ/;
-
-  return $w;
-}
-
-
-# ---------------------- #
-#     sub upcase()
-# for ISO 8859-15 (latin-9)
-# ---------------------- #
-sub upcase {
-  my $w = shift;
-
-  $w =~ tr/abcdefghijklmnopqrstuvwxyzàáâãäåæèéêëìíîïòóôõöøùúûüýÿçðñþšžœ/ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝŸÇÐÑÞŠŽŒ/;
-
-  return $w;
-}
-
 
 
 
@@ -374,6 +346,7 @@ sub treatDot {
   elsif ($w =~ /^(${upper})\.\-(${upper})\.*$/o) {}
   elsif ($w =~ /^(${upper})\.$/o) {}
   elsif ($w =~ /^(${upper})\.(${upper})\.$/o) {}
+  elsif ($w =~ s/(${alphanum}{2,})(\.)$/$1 $2/) {}
   else {
     $w =~ s/(?!${punct})(\.)(?!${punct})/$1 $2 $3/og;
     # $w =~ s/(${alphanum}*)(\.)(${alphanum}*)/$1 $2 $3/og;

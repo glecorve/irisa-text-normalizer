@@ -13,25 +13,54 @@ use Getopt::Long;
 use File::Basename;
 use Lingua::EN::Numbers qw(num2en num2en_ordinal);
 use File::Temp qw/ tempfile tempdir /;
-use POSIX qw(strftime locale_h);
-use locale;
-setlocale(LC_CTYPE, "UTF8");
-setlocale(LC_COLLATE, "UTF8");
+# use POSIX qw(strftime locale_h);
+# use locale;
+# setlocale(LC_CTYPE, "UTF8");
+# setlocale(LC_COLLATE, "UTF8");
 use strict;
+use PostProcessing;
 use CorpusNormalisationEn;
-use NormalisationOptions;
 
 my $HELP;
-my $CLASSPATH=".";
 my $KEEP_PARA = 0;
-my $TMPDIR="/tmp";
-my $VERBOSE=0;
-my $TEXT = "";
 my $END_SEP = " |\n|\$|'s? ";
 my $VOCAB = "";
-my @protected = ();
-	
+
 $|++; #autoflush
+
+
+#############################################################
+# USAGE
+#############################################################
+
+
+
+sub usage {
+	warn <<EOF;
+Usage:
+    specific-normalization.pl [OPTIONS] <config_file> <text_file>
+
+Synopsis:
+    Applying some basic modifications to the text according to what is specified in the config file. This config file is made of basic commands (see below), one command per line. These commands are applied in same order as listed in the config file. The processed text is output to STDOUT.
+
+Options:
+    -cp, --classpath=dir
+                     Directory where class-specific files are created.
+                     Default is the working directory.
+    -h, --help       Print the help message.
+    -P, --keep-par   Do not remove emty lines
+    -t, --temp=dir   Set the directory to store temporary files when using external scripts.
+    -v, --verbose    Print information at runtime.
+    -V, --vocab=file List of words that cannot be modified.
+
+Config File Format:
+EOF
+	foreach my $k (sort keys %OPTIONS) {
+		warn "   $k\n       -- ".$OPTIONS{$k}[0]."\n";
+	}
+	exit 0;
+}
+
 
 #
 # Process command line
@@ -57,130 +86,30 @@ if ($HELP == 1) { usage(); }
 # FUNCTIONS
 #####################################################################
 
-
-my %option2function = (
-	"TAG_NO_TIME" => "NO_X_TAG('TIME')",
-	"TAG_NO_DATE" => "NO_X_TAG('DATE')",
-	"TAG_NO_QUANTITY" => "NO_X_TAG('QUANTITY')",
-	"TAG_NO_CURRENCY" => "NO_X_TAG('CURRENCY')",
-	"TAG_NO_PERSON" => "NO_X_TAG('PERSON')",
-	"TAG_NO_LOCATION" => "NO_X_TAG('LOCATION')",
-	"TAG_NO_URL" => "NO_X_TAG('URL')",
-	"TAG_NO_PHONE" => "NO_X_TAG('PHONE')",
-	"TAG_NO_ORGANIZATION" => "NO_X_TAG('ORGANIZATION')",
-	);
-
-
-
-
-sub trim_blanks {
-	$TEXT =~ s/ +/ /g;
-	$TEXT =~ s/ $//gm;
-	$TEXT =~ s/^ //gm;
-}
-
-sub protect_words {
-	foreach my $w (@protected) {
-		if (is_active_option('CASE_OFF')) {
-			$TEXT =~ s/(^| |\n)($w)(?= |\n|$)/$1_$2_/gim;
+sub ACRONYMS_EXPLODED_UNLESS_READABLE {
+	my $OLD_TEXT = "";
+	while ($OLD_TEXT ne $TEXT) {
+		my @NEW_WORDS = ();
+		foreach my $w (split(/ /,$TEXT)) {
+			my $changed = 1;
+			if ($w =~ /^([A-Z]\.?){2,}$/) {
+				my $pronunceable_prefix = "";
+				while (!pronounceable_acronym($w)) {
+					if ($w =~ /^((?:[A-Z])\.?)/) {
+						$w =~ s/^([A-Z])\.?//g;
+						$pronunceable_prefix .= "$1. ";
+					}
+					else { last; }
+				}
+				$w =~ s/\.//g;
+				$w = $pronunceable_prefix . $w;
+			}
+			push(@NEW_WORDS, $w);
 		}
-		else {
-			$TEXT =~ s/(^| |\n)($w)(?= |\n|$)/$1_$2_/gm;
-		}
+		$OLD_TEXT = $TEXT;
+		$TEXT = join(" ", @NEW_WORDS);
+		ACRONYMS_EXPLODED();
 	}
-}
-
-sub unprotect_words {
-	foreach my $w (@protected) {
-		if (is_active_option('CASE_OFF')) {
-			$TEXT =~ s/(^| |\n)_($w)_(?= |\n|$)/$1$2/gim;
-		}
-		else {
-			$TEXT =~ s/(^| |\n)_($w)_(?= |\n|$)/$1$2/gm;
-		}
-	}
-}
-
-sub compact_saxon_genitive {
-	$TEXT =~ s/ 's/'s/g;
-}
-
-my %class = ();
-
-sub write_tags {
-	foreach my $k (keys %class) {
-		$VERBOSE && print STDERR "Writing class $k into $CLASSPATH/".lc($k).".class...";
-		open(F, "> $CLASSPATH/".lc($k).".class") or die ("Unable to open $CLASSPATH/".lc($k).".class\n");
-		my $i = 0;
-		foreach my $seq (@{$class{$k}}) {
-			print F $seq."\n";
-			$i++;
-		}
-		close(F);
-		$VERBOSE && print STDERR " OK ($i elements written).\n";
-	}
-}
-
-sub TAGS_ON {
-	sub store {
-		my $c = shift;
-		my $w = shift;
-		if (!defined($class{$c})) {
-			@{$class{$c}} = ();
-		}
-		push(@{$class{$c}}, $w);
-		return "";
-	}
-	$TEXT =~ s/<([A-Z]+)> (.*?) <\/\1>/"<$1>".store($1,$2)/ge;
-}
-
-
-sub TAGS_OFF {
-	$TEXT =~ s/ ?<\/?[A-Z]+> ?/ /g;
-	compact_saxon_genitive();
-}
-
-
-sub TAGS_INLINE {
-	#nothing to do
-}
-
-
-sub NO_X_TAG {
-	my $x = shift;
-	$TEXT =~ s/ ?<\/?$x> ?/ /g;
-	compact_saxon_genitive();
-}
-
-
-
-sub HYPHENS_ON {
-	#nothing to do
-}
-
-
-sub HYPHENS_OFF {
-	$TEXT =~ s/-/ /g;
-}
-
-
-sub HYPHENS_INTERNAL {
-	$TEXT =~ s/(^| )-/$1/gm;
-	$TEXT =~ s/-( |\n|$)/$1/gm;
-}
-
-sub ACRONYMS_DOT {
-	#nothing
-}
-
-sub ACRONYMS_JOINT {
-	sub rejoin {
-		my $x = shift;
-		$x =~ s/\.//g;
-		return $x;
-	}
-	$TEXT =~ s/((?:[A-Z]\.\-?|[0-9]\-?|){2,})/rejoin($1)/ge;
-	$TEXT =~ s/([A-Z])\.(\-?[A-Z])/$1$2/g;
 }
 
 sub ACRONYMS_EXPLODED {
@@ -188,7 +117,7 @@ sub ACRONYMS_EXPLODED {
 	sub explode {
 		my $x = shift;
 		$x =~ s/&/ AND /g;
-		
+
 		#separates numbers first
 		$x =~ s/([0-9])\1\1\1/ four $1 /g;
 		$x =~ s/([0-9])\1\1/ triple $1 /g;
@@ -203,14 +132,14 @@ sub ACRONYMS_EXPLODED {
 		$x =~ s/ty s$/ties/g;
 		$x =~ s/ \.(.)/ point /g;
 		$x =~ s/ \.//g;
-		
+
 		# if no number left
 		# process letters
 		while ($x =~ s/([A-Za-z]\.)(?! )/$1 /g) {}
 		$x =~ s/([0-9]\.)(?>!\.)/$1/g;
 		$x =~ s/([A-Z])(?>!\.)/$1./g;
 		$x =~ s/(^| )([a-z]) /$1.uc($2).". "/ge;
-		
+
 
 		$x =~ s/-+/ /g;
 		$x =~ s/ +/ /g;
@@ -220,66 +149,17 @@ sub ACRONYMS_EXPLODED {
 
 		return $x;
 	}
-	
+
 	$TEXT =~ s/(^| )([A-Z0-9]\.?(?:[-&]?[A-Za-z0-9\-]+\.?)+)(?='s|s|'| |\n|$)/$1.explode($2)/gem;
 	$TEXT =~ s/(^| )([a-z]+(?:[-&]?[A-Za-z0-9\-]+\.?)+)(?='s|s|'| |\n|$)/$1.explode($2)/gem;
 }
 
-sub SAXON_GENITIVES_JOINT {
-	#nothing to do
-}
-
-sub SAXON_GENITIVES_JOINT_IF_POSSIBLE {
-	#nothing to do
-}
-
-
-sub SAXON_GENITIVES_EXPLODED {
-	if (is_active_option('CASE_OFF')) {
-		$TEXT =~ s/'s( |\n|$)/ 'S$1/gim;
-		$TEXT =~ s/s'( |\n|$)/ 'S$1/gim;
-	}
-	else {
-		$TEXT =~ s/'s( |\n|$)/ 's$1/gim;
-		$TEXT =~ s/s'( |\n|$)/ 's$1/gim;
-	}
-}
-
-sub CASE_ON {
-	# nothing to do
-}
 
 
 sub CASE_OFF {
 	$TEXT = uc($TEXT);
 }
 
-sub SPELLING_BRITISH {
-	if (is_active_option('CASE_OFF')) {
-		define_rule_case_unsensitive();
-	}
-	apply_rules(\$TEXT, dirname( abs_path(__FILE__) )."/../../rsrc/en/us2uk.rules");
-}
-
-sub SPELLING_AMERICAN {
-	# nothing to do
-}
-
-
-
-sub EXTERNAL_SCRIPT {
-	my $cmd = shift;
-	my ($fh, $filename) = tempfile("spec-norm.XXXXXX", DIR => $TMPDIR, UNLINK => 1);
-	print $fh $TEXT;
-	close($fh);
-	if ($cmd =~ /{TEXT}/) {
-		$cmd =~ s/{TEXT}/$filename/g;
-	}
-	else { $cmd .= " $filename" }
-	$VERBOSE && print STDERR "Running external script '$cmd'...";
-	eval { $TEXT = `$cmd`};
-	die("Error while applying external script '$cmd':\n$@\n") if ($@);
-}
 
 sub final {
 	$TEXT =~ s/(^| )(\d+(?:\.\d*)?)(?= |\n|$)/$1.num2en($2)/gem;
@@ -301,9 +181,9 @@ sub final {
 #####################################################################
 # MAIN
 #####################################################################
-	
-	
-	
+
+
+
 
 # read config file
 my $f = shift;
@@ -341,7 +221,7 @@ foreach my $processing (@CONFIG) {
 	if (defined($option2function{$processing})) {
 		$VERBOSE && print STDERR "Applying ".$option2function{$processing}."...";
 		eval $option2function{$processing}; warn $@ if $@;
-		
+
 	}
 	elsif ($processing =~ /^EXTERNAL_SCRIPT=(.*)$/) {
 		EXTERNAL_SCRIPT($1);
@@ -371,41 +251,4 @@ $VERBOSE && print STDERR " OK\n";
 write_tags();
 
 
-
-
-
-#############################################################
-# USAGE
-#############################################################
-
-
-
-sub usage {
-	warn <<EOF;
-Usage:
-    specific-normalization.pl [OPTIONS] <config_file> <text_file>
-    
-Synopsis:
-    Applying some basic modifications to the text according to what is specified in the config file. This config file is made of basic commands (see below), one command per line. These commands are applied in same order as listed in the config file. The processed text is output to STDOUT.
-    
-Options:
-    -cp, --classpath=dir
-                     Directory where class-specific files are created.
-                     Default is the working directory.
-    -h, --help       Print the help message.
-    -P, --keep-par   Do not remove emty lines
-    -t, --temp=dir   Set the directory to store temporary files when using external scripts.
-    -v, --verbose    Print information at runtime.
-    -V, --vocab=file List of words that cannot be modified.
-    
-Config File Format:
-EOF
-	foreach my $k (sort keys %OPTIONS) {
-		warn "   $k\n       -- ".$OPTIONS{$k}[0]."\n";
-	}
-	exit 0;
-}
-
 #e#o#f#
-
-

@@ -1,9 +1,11 @@
 # library to upcase, downcase or remove diacritics of letters
 #
 
-package capLetter;
+package Case;
 
 use strict;
+
+use Exporter;
 
 use vars qw(@ISA @EXPORT);
 @ISA=qw(Exporter);
@@ -11,32 +13,35 @@ BEGIN {
   @EXPORT = qw(&downcase &upcase &rmDiacritics);
 }
 
+use vars qw(@ISA @EXPORT);
+@ISA=qw(Exporter);
+BEGIN {
+  @EXPORT = qw(&downcase &upcase &rmDiacritics);
+}
 
 # for latin-9 (ISO 8859-15)
 our $alphanum = "[0-9a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
-our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]"; 
+our $letter = "[a-zA-ZÀ-ÖØ-öø-ÿŠšŽžŒœŸ]";
 our $upper = "[A-ZÀ-ÖØ-ÞŠŽŒŸ]";
 our $downer = "[a-zà-öø-ÿŠŽŒŸ]";
 
 
 
-# ---------------------- #
-#     sub downcase()
-# for ISO 8859-15 (latin-9)
-# ---------------------- #
+#
+# Substitute lc() functions not dependant on locale.
+#
 sub downcase {
   my $w = shift;
-  $w =~ s/É/é/g;
-  $w =~ tr/ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝŸÇÐÑÞŽŒ/abcdefghijklmnopqrstuvwxyzàáâãäåæèéêëìíîïòóôõöøùúûüýÿçðñþžœ/;
+  if (defined($w)) {
+	$w =~ tr/ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÈÉÊËÌÍÎÏÒÓÔÕÖØÙÚÛÜÝÇ/abcdefghijklmnopqrstuvwxyzàáâãäåæèéêëìíîïòóôõöøùúûüÿç/;
+  }
 
   return $w;
 }
 
-
-# ---------------------- #
-#     sub upcase()
-# for ISO 8859-15 (latin-9)
-# ---------------------- #
+#
+# Substitute uc() functions not dependant on locale.
+#
 sub upcase {
   my $w = shift;
 

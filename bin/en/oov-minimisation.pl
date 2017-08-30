@@ -2,7 +2,7 @@
 #
 # Derive rules for OOV minimization from counts
 #
-# Gwénolé Lecorvé <gwenole.lecorve@idiap.ch>
+# Gwénolé Lecorvé
 # July, 2011
 #
 
@@ -12,7 +12,7 @@ use File::Basename;
 use lib dirname( abs_path(__FILE__) )."/../../lib";
 use CorpusNormalisationEn;
 use CountProcessingEn;
-use NormalisationOptions;
+use PostProcessing;
 use Getopt::Long;
 
 
@@ -39,7 +39,7 @@ my $KEY = "";
 my $SKIP_BIGRAMS = 0;
 
 
-	
+
 $|++; #autoflush
 
 #
@@ -98,7 +98,7 @@ set_vocab_size($VOCAB_SIZE);
 load_2g_counts(shift(@ARGV), $MINCOUNT);
 list_words(\@words);
 foreach my $cl (@CLASSES) {
-	
+
 }
 update_in_vocabulary(\@words);
 if ($VOCAB_SIZE > $#words+1) {
@@ -116,7 +116,7 @@ while ($STEP) {
 	# if rules AB -> AC and C -> D during the same pass
 	# just apply AB -> AC and discard C -> D for this pass
 	remove_conflicts(\%new_rules);
-	
+
 	#map new rules onto the old ones and update counts at the same time
 	# old = A -> B ; new = B -> C ; result is all = { A -> C ; B -> C }
 	apply_mapping(\%new_rules, \%all_rules, \%reverse_rules);
@@ -128,8 +128,8 @@ while ($STEP) {
 	list_words(\@new_words);
 
 	update_in_vocabulary(\@new_words);
-	
-	
+
+
 
 	#if new rules have been found
 	if (keys(%new_rules)+0 > 0) {
@@ -148,32 +148,32 @@ if ($SKIP_BIGRAMS == 0) {
 update_uni_counts_in_bigrams();
  while ($STEP) {
  	print STDERR `date "+%d/%m/%y %H:%M:%S"`." ----------------- STEP $STEP -------- \n\n";
- 
+
  	#loop over oovs
  	loop_over_bigrams(\%new_rules);
- 	
+
 
  	# if rules AB -> AC and C -> D during the same pass
  	# just apply AB -> AC and discard C -> D for this pass
  	remove_conflicts(\%new_rules);
- 	
+
  	#map new rules onto the old ones and update counts at the same time
  	# old = A -> B ; new = B -> C ; result is all = { A -> C ; B -> C }
  	apply_mapping(\%new_rules, \%all_rules, \%reverse_rules);
  	add_new_rules(\%new_rules, \%all_rules, \%reverse_rules);
- 
+
  	#compute new voc
  	update_counts(\%reverse_rules);
 	update_uni_counts_in_bigrams();
  	@new_words = ();
  	list_words(\@new_words);
- 
+
  	update_in_vocabulary(\@new_words);
- 	
- 	
- 	
+
+
+
  	%new_rules = ();
- 
+
  	#if new voc != old voc
  	if (same_vocab(\@new_words, \@words) == 0) {
  		#then redo
@@ -208,13 +208,13 @@ sub usage {
 	warn <<EOF;
 Usage:
     oov-minimisation.pl [OPTIONS] <vocab_size> <2g_count_file> [ <class_file_1>  [...] ]
-    
+
 Synopsis:
     Return a set of rewritting rules enabling the user to build a vocabulary with
     a minimum OOV rate for the requested size.
     To ensure not to break some normalization rules previously defined, it is
     advised to set a configuration file through the option --config.
-    
+
 Options:
     -h, --help         Print the help message.
     -c, --config=file  Read a specific normalisation configuration file in order to
@@ -227,5 +227,3 @@ EOF
 }
 
 #e#o#f#
-
-

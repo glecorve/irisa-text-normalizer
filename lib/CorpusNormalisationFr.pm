@@ -17,9 +17,9 @@ use lib dirname( abs_path(__FILE__) )."/.";
 
 use strict;
 
-use capLetter;
-use tokenize;
-use spellnum;
+use Case;
+use RulesApplication;
+use NumbersFr;
 use Encode;
 use Unicode::Normalize;
 use Lingua::FR::Numbers qw(number_to_fr ordinate_to_fr);
@@ -45,14 +45,13 @@ use strict;
 use vars qw(@ISA @EXPORT);
 @ISA=qw(Exporter);
 BEGIN {
-  @EXPORT = qw(%lexicon %pos &load_pos &define_rule_preprocessing &define_rule_case_unsensitive &define_rule_case_sensitive &undefine_rule_preprocessing &load_lexicon &load_NP &first_letter &url &currencies &units &date_and_time &roman_numbers &numbers &remove_bugs &apply_rules &apply_rules_comptes &triple_lettre &complex_abbreviations &acronyms &compact_initials &hyphenate &apostrophes &end &split_entities &telephone &tag_ne &remove_diacritics &process_ing &process_d &trim_blanks);
+  @EXPORT = qw(%lexicon %pos &load_pos &define_rule_preprocessing &undefine_rule_preprocessing &load_lexicon &load_NP &first_letter &url &currencies &units &date_and_time &roman_numbers &numbers &remove_bugs &apply_rules &apply_rules_comptes &triple_lettre &complex_abbreviations &acronyms &compact_initials &hyphenate &apostrophes &end &split_entities &telephone &tag_ne &remove_diacritics &process_ing &process_d &trim_blanks);
 }
 
 
 our %pos;
 our %lexicon;
 my %NP;
-my %maps = ();
 
 my $MONTH = "(Janvier|Février|Mars|Avril|Mai|Juin|Juillet|Août|Septembre|Octobre|Novembre|Décembre|Jan\.|Fév\.|Mar\.|Avr\.|Juil\.|Sep\.|Oct\.|Nov\.|Déc\.)";
 my $DAY = "(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimance)";
@@ -81,19 +80,19 @@ my $END_SEP = " |\n|\$|'s? ";
 ##################################################################
 
 sub define_rule_preprocessing {
-	tokenize::define_rule_preprocessing(shift(@_));
+	RulesApplication::define_rule_preprocessing(shift(@_));
 }
 
 sub undefine_rule_preprocessing {
-	tokenize::undefine_rule_preprocessing();
+	RulesApplication::undefine_rule_preprocessing();
 }
 
 sub define_rule_case_unsensitive {
-	tokenize::define_rule_case_unsensitive();
+	RulesApplication::define_rule_case_unsensitive();
 }
 
 sub define_rule_case_sensitive {
-	tokenize::define_rule_case_sensitive();
+	RulesApplication::define_rule_case_sensitive();
 }
 
 sub load_pos {
@@ -167,55 +166,6 @@ sub load_list {
 	}
 	close(F);
 }
-
-
-##################################################################
-# APPLY MAPPING RULES (generic function: read a mapping file)
-##################################################################
-
-sub load_rules {
-	my $KEY = shift;
-	my @rule_files = @_;
-
-	my @map;
-	reset_token_map();
-
-	for my $i (0 .. $#rule_files) {
-	tokenize::load_token_map(\@map, $rule_files[$i]);
-	}
-
-	$maps{$KEY} = \@map;
-	return;
-}
-
-sub apply_rules {
-	my $P_TEXT = shift;
-	my @rule_files = @_;
-
-  for my $i (0 .. $#rule_files) {
-    if ($maps{$rule_files[$i]} == 0) {
-      load_rules($rule_files[$i], $rule_files[$i]);
-    }
-	   tokenize::map_string($P_TEXT, $maps{$rule_files[$i]});
-   }
-	return;
-}
-
-sub apply_rules_comptes {
-	my $TEXT = shift;
-	my @rule_files = @_;
-
-	my @map;
-	reset_token_map();
-
-	for my $i (0 .. $#rule_files) {
-	tokenize::load_token_map(\@map, $rule_files[$i]);
-	}
-
-	return tokenize::map_string_on_counts($TEXT, \@map);
-
-}
-
 
 
 #############################################################################
@@ -364,7 +314,7 @@ sub process_first_letter {
 	my $w = shift;
 	my $x = shift;
 	my $retour;
-	my $lcw = downcase($w);
+
 # 	print "$w/$lcw\n";
 
 	#Extract the prefix/root of the word
@@ -373,6 +323,9 @@ sub process_first_letter {
 	$w =~ s/^(.*?)-[a-z].*$/$1/;
 	$w =~ s/^(.*')(.*)/$1/;
 	if ($2 ne "") { $x = $2; }
+  $w =~ s/^(.*)\./$1/;
+
+  my $lcw = downcase($w);
 
 	if ($w =~ /^[B-Z]$/) {
 # 	print "A\n";
@@ -423,7 +376,6 @@ sub process_first_letter {
 # INPUT: single line text
 sub first_letter_2 {
 	my $phrase = shift;
-
 	my @words = split(/\s/, $phrase);
 
 	my $i;
@@ -1538,8 +1490,7 @@ sub acronyms {
 	   }
 	}
 
- 	#ITunes -> I.Tunes
- 	#JCDecaux -> J.C.Decaux
+ 	#CHO2H -> C.H.O.2H.
 	sub explode_chemicals {
 		my $x = shift;
 		our $CHEM;
@@ -1580,7 +1531,7 @@ sub acronyms {
 	$$p_text =~ s/(^| |\b)([A-Z]{2,}(?:-[A-Z]{2,})+)($END_SEP|s )/$1.separate_acronyms($2).$3/gem;
 
 
- 	#join letter whitin acronyms
+ 	#join letter within acronyms
  	$$p_text =~ s/(^| |\b)([A-Z0-9]\. ?[A-Z0-9](?:\. ?[A-Z0-9])+)(\.?)(?=$END_SEP|s )/$1.join_acronym($2.$3)/gem;
  	$$p_text =~ s/(^| |\b)([A-Z0-9]-[A-Z0-9](?:-[A-Z0-9])+)(?=$END_SEP|s )/$1.join_acronym($2)/gem;
 

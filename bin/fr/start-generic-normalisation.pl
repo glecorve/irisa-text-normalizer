@@ -157,6 +157,10 @@ $VERBOSE && print STDERR ".";
 	$TEXT =~ s/ $//gm;
 	$TEXT =~ s/^ //gm;
 
+$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Lowercase beginning of sentences.";
+
+$VERBOSE && print STDERR ".";
+
 print $TEXT;
 print STDERR "\n";
 
