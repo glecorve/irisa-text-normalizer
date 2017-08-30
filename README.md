@@ -5,18 +5,14 @@ Text normalisation tools from IRISA lab
 
 The tools provided here are split into 3 steps:
 1. Tokenisation (adding blanks around punctation marks, dealing with special cases like URLs, etc.)
-2. General normalisation (leading to homogeneous texts where (almost) information have been lost and where tags have been added for some entities)
-3. Specific normalisation (projection the generic texts into specific forms)
+2. Generic normalisation (leading to homogeneous texts where (almost) information have been lost and where tags have been added for some entities)
+3. Specific normalisation (projection of the generic texts into specific forms)
 
 
 ## Supported languages:
 
 - English
 - French
-
-## Configuration
-
-See INSTALL file
 
 ## Commands
 
@@ -25,20 +21,22 @@ See INSTALL file
 
 ### Tokenisation
 
-    perl bin/$LANGUAGE/basic-tokenizer.pl examples/$LANGUAGE/text.raw > examples/$LANGUAGE/text.tokenized
+    perl bin/$LANGUAGE/basic-tokenizer.pl examples/$LANGUAGE/text.raw > examples/$LANGUAGE/text.tokenized.txt
 
 ### Generic normalisation
 
     perl bin/$LANGUAGE/start-generic-normalisation.pl examples/$LANGUAGE/text.tokenized > examples/$LANGUAGE/text.norm.step1
-    bash bin/$LANGUAGE/tag-named-entities.sh examples/$LANGUAGE/text.norm.step1 > examples/$LANGUAGE/text.norm.step2
-    perl bin/$LANGUAGE/end-generic-normalisation.pl examples/$LANGUAGE/text.norm.step2 > examples/$LANGUAGE/text.norm.step3
-    
+    # <-- Here you may wish to run some extra tool -->
+    perl bin/$LANGUAGE/end-generic-normalisation.pl examples/$LANGUAGE/text.norm.step1.txt > examples/$LANGUAGE/text.norm.step2.txt
+
 or simply:
 
-    bash bin/$LANGUAGE/generic-normalisation.sh text-normalisation/examples/$LANGUAGE/text.tokenized
+    bash bin/$LANGUAGE/generic-normalisation.sh text-normalisation/examples/$LANGUAGE/text.tokenized.txt
 
 ### 2 examples of specific normalisations
 
-    perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/asr.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.asr
-    perl bin/$LANGUAGE/specific-normalisation.pl cfg/$LANGUAGE/indexing.cfg examples/$LANGUAGE/text.norm.step3 > examples/$LANGUAGE/text.indexing
+    perl bin/$LANGUAGE/specific-normalisation.pl cfg/asr.cfg examples/$LANGUAGE/text.norm.step2 > examples/$LANGUAGE/text.asr.txt
+    perl bin/$LANGUAGE/specific-normalisation.pl cfg/tts.cfg examples/$LANGUAGE/text.norm.step2 > examples/$LANGUAGE/text.tts.txt
 
+### Create your own configuration for specific normalisation
+    perl bin/$LANGUAGE/specific-normalisation.pl -h
