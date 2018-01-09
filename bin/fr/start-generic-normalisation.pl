@@ -21,10 +21,8 @@ my $WIKTIONARY_WORD_POS = "$RSRC/word_pos.lst";
 my $LEXIQUE_FILE = "$RSRC/lexicon_fr";
 
 my $HELP=0;
+my $OUTPUT;
 my $VERBOSE=0;
-my $ESTER=0;
-my $KEEP_PARA = 0;
-my $KEEP_PUNC = 0;
 
 $|++; #autoflush
 
@@ -33,113 +31,145 @@ $|++; #autoflush
 #
 Getopt::Long::config("no_ignore_case");
 GetOptions(
-	"ester|e" => \$ESTER,
 	"help|h" => \$HELP,
-	"keep-par|P" => \$KEEP_PARA,
-	"keep-punc|p" => \$KEEP_PUNC,
-	"verbose|v" => \$VERBOSE,
+	"output|o=s" => \$OUTPUT,
+	"verbose|v" => \$VERBOSE
 )
 or usage();
-
 
 (@ARGV == 1) or usage();
 if ($HELP == 1) { usage(); }
 
+###########################################
 
+# open the input files
+my @FILES = ();
+my $INPUT = shift;
 
-# open the input file
-my $f = shift;
-my $TEXT = "";
-open(INPUT, "< $f") or die("Unable to open file $f.\n");
-while(<INPUT>) {
-	$TEXT .= $_;
+if (-d $INPUT) {
+	opendir(DIR, $INPUT);
+	foreach $_ (sort(grep {-f "$INPUT/$_" && ! /^\.{1,2}$/} readdir(DIR))) {
+		push(@FILES, "$INPUT/$_");
+	}
+	closedir(DIR);
 }
-close(INPUT);
+else {
+	push(@FILES, $INPUT);
+}
 
-my $weak_punc = "[,;:¡¿\(\)]";
+# Make output file empty
+if (-f $OUTPUT) {
+		open(O, "> $OUTPUT") or die("Could not open file $OUTPUT");
+		close(O);
+}
+
+###########################################
 
 load_pos($WIKTIONARY_WORD_POS);
 load_lexicon($LEXIQUE_FILE);
-my $STEP = 0;
 
+# open the input file
+foreach my $f (@FILES) {
+	$VERBOSE && print STDERR "Reading $f...\n";
+	my $TEXT = "";
+	open(INPUT, "< $f") or die("Unable to open file $f.\n");
+	while(<INPUT>) {
+		$TEXT .= $_;
+	}
+	close(INPUT);
 
-#############################################################
-# particularités
-#############################################################
+	my $weak_punc = "[,;:¡¿\(\)]";
 
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." --Preliminary special processes.";
-	remove_bugs(\$TEXT);
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/special.rules");
-$VERBOSE && print STDERR ".";
-	triple_lettre(\$TEXT);
-$VERBOSE && print STDERR ".";
-	compact_initials(\$TEXT);
-$VERBOSE && print STDERR ".\n";
-$TEXT =~ s/($weak_punc) / $1 /mg;
+	my $STEP = 0;
 
-$TEXT =~ s/([a-z]) - ([A-Za-z])/$1\n$2/mg;
-$TEXT =~ s/ \(/ ( /mg;
-$TEXT =~ s/(\b)(«|»|")/ $1 $2 /mg; #take care with unicode characters, do not use [ab] but (a|b)
-$TEXT =~ s/(«|»|")(\n|\b)/ $1 $2 /mg;
-	trim_blanks(\$TEXT);
+	#############################################################
+	# particularités
+	#############################################################
 
-#############################################################
+	$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." --Preliminary special processes.";
+		remove_bugs(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/special.rules");
+	$VERBOSE && print STDERR ".";
+		triple_lettre(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		compact_initials(\$TEXT);
+	$VERBOSE && print STDERR ".\n";
+	$TEXT =~ s/($weak_punc) / $1 /mg;
 
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Transformation to a French-compliant form.";
-	$TEXT = remove_diacritics($TEXT);
-	define_rule_preprocessing("perl ".dirname( abs_path(__FILE__) )."/remove-diacritics.pl");
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/hesitations.rules");
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/case-accent.rules");
-$VERBOSE && print STDERR ".";
-	$TEXT = first_letter($TEXT);
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/accent-no_case.rules");
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/misspellings.rules", "$RSRC/alternative_spellings.rules", "$RSRC/alternative_forms.rules");
-$VERBOSE && print STDERR ".\n";
+	$TEXT =~ s/([a-z]) - ([A-Za-z])/$1\n$2/mg;
+	$TEXT =~ s/ \(/ ( /mg;
+	$TEXT =~ s/(\b)(«|»|")/ $1 $2 /mg; #take care with unicode characters, do not use [ab] but (a|b)
+	$TEXT =~ s/(«|»|")(\n|\b)/ $1 $2 /mg;
+		trim_blanks(\$TEXT);
 
-#############################################################
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Expansion and tagging.";
-	apply_rules(\$TEXT, "$RSRC/abbreviations.rules");
-	complex_abbreviations(\$TEXT);
-$VERBOSE && print STDERR ".";
-	url(\$TEXT);
-	$TEXT =~ s/_/ /mg;
-	date_and_time(\$TEXT);
-$VERBOSE && print STDERR ".";
-	currencies(\$TEXT);
-$VERBOSE && print STDERR ".";
-	units(\$TEXT);
-$VERBOSE && print STDERR ".";
-	telephone(\$TEXT);
-$VERBOSE && print STDERR ".\n";
+	#############################################################
 
-###################################################
+	$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Transformation to a French-compliant form.";
+		$TEXT = remove_diacritics($TEXT);
+		define_rule_preprocessing("perl ".dirname( abs_path(__FILE__) )."/remove-diacritics.pl");
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/hesitations.rules");
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/case-accent.rules");
+	$VERBOSE && print STDERR ".";
+		$TEXT = first_letter($TEXT);
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/accent-no_case.rules");
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/misspellings.rules", "$RSRC/alternative_spellings.rules", "$RSRC/alternative_forms.rules");
+	$VERBOSE && print STDERR ".\n";
 
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Proper names processing.";
-# 	apply_rules(\$TEXT, "$RSRC/propername-apostrophe-removal.wikipedia.rules", "$RSRC/propername-apostrophe-blanking.wikipedia.rules");
-# $VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/propername-hyphen-remove.rules", "$RSRC/propername-hyphen-add.rules");
-$VERBOSE && print STDERR ".";
-	apply_rules(\$TEXT, "$RSRC/propername-case.rules", "$RSRC/propername-disambig.rules");
-$VERBOSE && print STDERR ".";
-	split_entities(\$TEXT,"$RSRC/countries.lst");
-	split_entities(\$TEXT,"$RSRC/cities.lst");
-	split_entities(\$TEXT,"$RSRC/planets.lst");
-$VERBOSE && print STDERR ".";
-	$TEXT =~ s/( | )+/ /gm;
-	$TEXT =~ s/ $//gm;
-	$TEXT =~ s/^ //gm;
+	#############################################################
+	$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Expansion and tagging.";
+		apply_rules(\$TEXT, "$RSRC/abbreviations.rules");
+		complex_abbreviations(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		url(\$TEXT);
+		$TEXT =~ s/_/ /mg;
+		date_and_time(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		currencies(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		units(\$TEXT);
+	$VERBOSE && print STDERR ".";
+		telephone(\$TEXT);
+	$VERBOSE && print STDERR ".\n";
 
-$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Lowercase beginning of sentences.";
+	###################################################
 
-$VERBOSE && print STDERR ".";
+	$VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Proper names processing.";
+	# 	apply_rules(\$TEXT, "$RSRC/propername-apostrophe-removal.wikipedia.rules", "$RSRC/propername-apostrophe-blanking.wikipedia.rules");
+	# $VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/propername-hyphen-remove.rules", "$RSRC/propername-hyphen-add.rules");
+	$VERBOSE && print STDERR ".";
+		apply_rules(\$TEXT, "$RSRC/propername-case.rules", "$RSRC/propername-disambig.rules");
+	$VERBOSE && print STDERR ".";
+		split_entities(\$TEXT,"$RSRC/countries.lst");
+		split_entities(\$TEXT,"$RSRC/cities.lst");
+		split_entities(\$TEXT,"$RSRC/planets.lst");
+	$VERBOSE && print STDERR ".";
+		$TEXT =~ s/( | )+/ /gm;
+		$TEXT =~ s/ $//gm;
+		$TEXT =~ s/^ //gm;
 
-print $TEXT;
+	if ($OUTPUT && -f $OUTPUT) {
+		open(O, ">> $OUTPUT") or die("Could not open file $OUTPUT .\n");
+		print O $TEXT;
+		close(O);
+	}
+	elsif ($OUTPUT && -d $OUTPUT) {
+		my $bn = File::Spec->abs2rel($f, $INPUT);
+		open(O, "> $OUTPUT/$bn") or die("Unable to open $f .\n");
+		print O $TEXT;
+		close(O);
+	}
+	if (@FILES > 0 && (!defined($OUTPUT) || -f $OUTPUT)) {
+		print STDOUT $TEXT;
+		print STDOUT "\n";
+	}
 
+}
 
 #############################################################
 # USAGE
