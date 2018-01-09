@@ -315,7 +315,7 @@ sub process_first_letter {
 	my $x = shift;
 	my $retour;
 
-# 	print "$w/$lcw\n";
+	# print "$w/$x\n";
 
 	#Extract the prefix/root of the word
 	# Boys' -> Boys
@@ -327,7 +327,7 @@ sub process_first_letter {
 
   my $lcw = downcase($w);
 
-	if ($w =~ /^[B-Z]$/) {
+	if ($w =~ /^[B-XZ]$/) {
 # 	print "A\n";
 		$retour = 0;
 	}
@@ -1565,7 +1565,7 @@ sub acronyms {
  	$$p_text =~ s/(^| )([A-Z])-/$1$2.-/gm;
 
  	# X -> X. (including X's -> X.'s)
- 	# except A and I
+ 	# except A, I and Y
  	$$p_text =~ s/(^| )([B-HJ-Z])(?=$END_SEP)/$1$2./gm;
  	$$p_text =~ s/(^| )([B-HJ-Z])'S(?= |\n|$)/$1$2.'s/gm;
  	$$p_text =~ s/(^| )([AI])'[sS]/$1$2.'s/gm;
@@ -2125,7 +2125,7 @@ sub end {
 	$$P_TEXT =~ s/(^| )\.+([^\. ]+)\.+(?=$END_SEP)/$1$2/gm;
 
 
-	#remove dots at the beginning anything but space
+	#remove dots at the beginning of anything but space
 	$$P_TEXT =~ s/(^| )\.([^\. \n])/$1$2/gm;
 
 

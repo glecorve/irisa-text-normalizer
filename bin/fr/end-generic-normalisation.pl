@@ -83,6 +83,8 @@ $VERBOSE && print STDERR ".";
 $VERBOSE && print STDERR ".";
 	apply_rules(\$TEXT, "$RSRC/case-accent.rules");
 $VERBOSE && print STDERR ".\n";
+  $TEXT = first_letter($TEXT);
+$VERBOSE && print STDERR ".\n";
 
 
 
@@ -134,7 +136,6 @@ $VERBOSE && print STDERR ".";
 $VERBOSE && print STDERR ".";
 
 print $TEXT;
-print STDERR "\n";
 
 
 #############################################################

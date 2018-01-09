@@ -1,8 +1,6 @@
 package Lingua::FR::Numbers;
 use strict;
 
-use utf8;
-
 use Carp qw(carp);
 use Exporter;
 use vars qw( $VERSION @ISA @EXPORT_OK );
@@ -342,12 +340,12 @@ equivalents
 
 =head1 DESCRIPTION
 
-This module converts a number into a French cardinal or ordinal. 
+This module converts a number into a French cardinal or ordinal.
 It supports decimal numbers, but this feature is
 experimental.
 
 The interface tries to conform to the one defined in Lingua::EN::Number,
-though this module does not provide any parse() method. Also, 
+though this module does not provide any parse() method. Also,
 unlike Lingua::En::Numbers, you can use this module in a procedural
 manner by importing the number_to_fr() function.
 
@@ -381,7 +379,7 @@ at least for now.
 This function can be exported by the module.
 
 =head2 ordinate_to_fr( $number )
- 
+
  use Lingua::FR::Numbers qw(ordinate_to_fr);
  my $twenty  = ordinate_to_fr( 20 );
  print "Tintin est reporter au petit $twenty";
@@ -394,7 +392,7 @@ This function can be exported by the module.
 
  my $start = Lingua::FR::Numbers->new( 500 );
  my $end   = Lingua::FR::Numbers->new( 3000 );
- print "Nous partîmes ", $start->get_string, 
+ print "Nous partîmes ", $start->get_string,
        "; mais par un prompt renfort\n",
        "Nous nous vîmes ", $end->get_string," en arrivant au port"
 
@@ -402,22 +400,22 @@ Creates and initializes a new instance of an object.
 
 =head2 parse( $number )
 
-Initializes (or reinitializes) the instance. 
+Initializes (or reinitializes) the instance.
 
 =head2 get_string()
 
  my $string = $number->get_string;
- 
+
 Returns the number as a formatted string in French, lowercased.
 
 =head2 get_ordinate()
 
  my $string = $number->get_ordinate;
- 
+
 Returns the ordinal representation of the number as a formatted string
 in French, lowercased.
 
- 
+
 =head1 DIAGNOSTICS
 
 =over
@@ -461,4 +459,3 @@ Briac Pilpré <briac@cpan.org>
 =head1 SEE ALSO
 
 Lingua::EN::Numbers, Lingua::Word2Num
-

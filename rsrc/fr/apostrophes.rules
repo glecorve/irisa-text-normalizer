@@ -92,6 +92,22 @@ til => till
 [Ww]e' d => we'd
 [Tt]hey' d => they'd
 
+[Jj](?= ai| avais) => j'
+[Jj](?= allais) => j'
+[Jj](?= aime| aimais| aimerai| aimerais) => j'
+[Tt](?= as| avais) => t'
+[Tt](?= allais) => t'
+[Tt](?= aimes| aimais| aimeras| aimerais) => t'
+[Tt](?= es| étais) => t'
+[Cc](?= est| était) => c'
+[Nn](?= ai| as| a| avons| avez| ont) => n'
+[Nn](?= avais| avait| avions| aviez| avaient) => n'
+[Nn](?= aurai| auras| aura| aurons| aurez| auront) => n'
+[Nn](?= aurais| aurait| aurions| auriez| auraient) => n'
+[Nn](?= es| est| êtes) => n'
+[Nn](?= étais| était| étions| étiez| étaient) => n'
+
+
 entr' +acte => entracte
 entr'acte => entracte
 entr' +actes => entractes

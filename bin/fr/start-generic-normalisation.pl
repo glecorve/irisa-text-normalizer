@@ -61,19 +61,7 @@ my $weak_punc = "[,;:¡¿\(\)]";
 load_pos($WIKTIONARY_WORD_POS);
 load_lexicon($LEXIQUE_FILE);
 my $STEP = 0;
-#  	$TEXT =~ s/($weak_punc) / $1 /mg;
-#  	$TEXT =~ s/ \(/ ( /mg;
-# 	trim_blanks(\$TEXT);
-# 	acronyms(\$TEXT);
-#	date_and_time(\$TEXT);
-#	units(\$TEXT);
-# 	tag_ne(\$TEXT);
-#	apostrophes(\$TEXT);
-#  	print $TEXT."\n";
-#  	exit;
 
-
-#106
 
 #############################################################
 # particularités
@@ -81,7 +69,6 @@ my $STEP = 0;
 
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." --Preliminary special processes.";
 	remove_bugs(\$TEXT);
-	#137
 $VERBOSE && print STDERR ".";
 	apply_rules(\$TEXT, "$RSRC/special.rules");
 $VERBOSE && print STDERR ".";
@@ -97,9 +84,8 @@ $TEXT =~ s/(\b)(«|»|")/ $1 $2 /mg; #take care with unicode characters, do not 
 $TEXT =~ s/(«|»|")(\n|\b)/ $1 $2 /mg;
 	trim_blanks(\$TEXT);
 
-#143.945
-
 #############################################################
+
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Transformation to a French-compliant form.";
 	$TEXT = remove_diacritics($TEXT);
 	define_rule_preprocessing("perl ".dirname( abs_path(__FILE__) )."/remove-diacritics.pl");
@@ -113,10 +99,7 @@ $VERBOSE && print STDERR ".";
 	apply_rules(\$TEXT, "$RSRC/accent-no_case.rules");
 $VERBOSE && print STDERR ".";
 	apply_rules(\$TEXT, "$RSRC/misspellings.rules", "$RSRC/alternative_spellings.rules", "$RSRC/alternative_forms.rules");
-# 	apply_rules(\$TEXT, "$RSRC/uk2us.rules");
 $VERBOSE && print STDERR ".\n";
-
-#183
 
 #############################################################
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Expansion and tagging.";
@@ -127,7 +110,6 @@ $VERBOSE && print STDERR ".";
 	$TEXT =~ s/_/ /mg;
 	date_and_time(\$TEXT);
 $VERBOSE && print STDERR ".";
-# #271
 	currencies(\$TEXT);
 $VERBOSE && print STDERR ".";
 	units(\$TEXT);
@@ -135,13 +117,8 @@ $VERBOSE && print STDERR ".";
 	telephone(\$TEXT);
 $VERBOSE && print STDERR ".\n";
 
-#342
+###################################################
 
-
-
-
-
-#############################################################
 $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Proper names processing.";
 # 	apply_rules(\$TEXT, "$RSRC/propername-apostrophe-removal.wikipedia.rules", "$RSRC/propername-apostrophe-blanking.wikipedia.rules");
 # $VERBOSE && print STDERR ".";
@@ -162,7 +139,6 @@ $VERBOSE && print STDERR `date "+%d/%m/%y %H:%M:%S"`." -- Lowercase beginning of
 $VERBOSE && print STDERR ".";
 
 print $TEXT;
-print STDERR "\n";
 
 
 #############################################################
