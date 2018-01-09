@@ -22,6 +22,8 @@ my $LEXIQUE_FILE = "$RSRC/lexicon_fr";
 
 my $HELP=0;
 my $OUTPUT;
+my $INPUT_EXTENSION;
+my $OUTPUT_EXTENSION;
 my $VERBOSE=0;
 
 $|++; #autoflush
@@ -33,6 +35,8 @@ Getopt::Long::config("no_ignore_case");
 GetOptions(
 	"help|h" => \$HELP,
 	"output|o=s" => \$OUTPUT,
+	"input-extension|e=s" => \$INPUT_EXTENSION,
+	"output-extension|E=s" => \$OUTPUT_EXTENSION,
 	"verbose|v" => \$VERBOSE
 )
 or usage();
@@ -48,8 +52,15 @@ my $INPUT = shift;
 
 if (-d $INPUT) {
 	opendir(DIR, $INPUT);
-	foreach $_ (sort(grep {-f "$INPUT/$_" && ! /^\.{1,2}$/} readdir(DIR))) {
-		push(@FILES, "$INPUT/$_");
+	if ($INPUT_EXTENSION) {
+		foreach $_ (sort(grep {-f "$INPUT/$_" && /\.${INPUT_EXTENSION}$/ && ! /^\.{1,2}$/} readdir(DIR))) {
+			push(@FILES, "$INPUT/$_");
+		}
+	}
+	else {
+		foreach $_ (sort(grep {-f "$INPUT/$_" && ! /^\.{1,2}$/} readdir(DIR))) {
+			push(@FILES, "$INPUT/$_");
+		}
 	}
 	closedir(DIR);
 }
@@ -160,6 +171,14 @@ foreach my $f (@FILES) {
 	}
 	elsif ($OUTPUT && -d $OUTPUT) {
 		my $bn = File::Spec->abs2rel($f, $INPUT);
+		if ($OUTPUT_EXTENSION) {
+			if ($INPUT_EXTENSION) {
+				$bn =~ s/\.$INPUT_EXTENSION$/\.$OUTPUT_EXTENSION/;
+			}
+			else {
+				$bn = "$bn.$OUTPUT_EXTENSION";
+			}
+		}
 		open(O, "> $OUTPUT/$bn") or die("Unable to open $f .\n");
 		print O $TEXT;
 		close(O);
@@ -180,7 +199,7 @@ foreach my $f (@FILES) {
 sub usage {
 	warn <<EOF;
 Usage:
-    normalize-text.pl [options] <input>
+    start-generic-normalization.pl [options] <input>
 
 Synopsis:
     Normalize the content of the input file.
@@ -189,6 +208,8 @@ Synopsis:
 Options:
     -h, --help
                  Print this help ;-)
+		-o, --output=file|directory
+                 Output file or directory instead of STDOUT
     -v, --verbose
                  Verbose
 EOF
