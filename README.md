@@ -8,6 +8,14 @@ The tools provided here are split into 3 steps:
 2. Generic normalisation (leading to homogeneous texts where (almost) information have been lost and where tags have been added for some entities)
 3. Specific normalisation (projection of the generic texts into specific forms)
 
+## How to cite
+	@misc{lecorve2017normalizer,
+	  title={The IRISA Text Normalizer},
+	  author={Lecorv{\'e}, Gw{\'e}nol{\'e}},
+	  howpublished={\url{https://github.com/glecorve/irisa-text-normalizer}},
+	  year={2017}
+	}
+
 
 ## Supported languages:
 
